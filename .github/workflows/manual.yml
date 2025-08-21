@@ -1,8 +1,11 @@
 name: Test Running
 on:
  schedule:
-  - cron : "42 0 * * *"
+  - cron : "47 0 * * *"
 
 jobs:
- - name: Echoing
- - run: echo "Successfully ran it"
+  job-one:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Just starting
+      run: echo "Successfully ran it"

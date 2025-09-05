@@ -84,10 +84,14 @@ urls = json.loads(os.environ.get('URLS'))
 dashboard = urls['dashboard']
 url = urls['domain']
 
+"""debugging """
+print(urls)
 
 # Loading dashboard page having JavaScript
 hpsoup = asyncio.run(load_page(dashboard))
 
+"""debugging """
+print(hpsoup.prettify())
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -101,6 +105,9 @@ subTable = pd.read_html(StringIO(str(sub)))[0]
 
 ipoTable['link'] = link
 
+""" debugging """
+print(ipoTable)
+
 #Converting Date to Date objects
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, '%d-%m-%Y').date())
 ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, '%d-%m-%Y').date())
@@ -108,7 +115,6 @@ ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, '%d-%
 #filter to open ipos only and if ipo table is null end process.
 ipoTable = ipoTable[ (ipoTable['Open'] <= today) & (ipoTable['Close'] >= today)]
 
-#### if not null
 # Clearing other table's columns
 subTable['Issuer Company'] = subTable['Issuer Company'].str.replace(" BSE, NSE",'')       
 subTable['Issue Size'] = subTable['Issue Size'].str.replace('₹','').str.replace(" Cr",'') 

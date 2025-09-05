@@ -90,9 +90,6 @@ print(urls)
 # Loading dashboard page having JavaScript
 hpsoup = asyncio.run(load_page(dashboard))
 
-"""debugging """
-print(hpsoup.prettify())
-
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
 gmp = hpsoup.find('div', id = "gmpTable")

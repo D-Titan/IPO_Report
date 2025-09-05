@@ -34,7 +34,7 @@ async def load_page(url):
 
         browser = await p.chromium.launch()
         page = await browser.new_page()
-        await page.goto(url)
+        await page.goto(url, timeout=60000)
         html_content = await page.content()
         await browser.close()
 

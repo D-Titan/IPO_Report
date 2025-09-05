@@ -31,3 +31,7 @@ jobs:
 
     - name: Run script
       run: python script.py
+      env:
+         SENDER: ${{secrets.SENDER}}
+         RECIEVERS: ${{secrets.RECIEVERS}}
+         URLS: ${{secrets.URLS}}

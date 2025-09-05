@@ -28,7 +28,7 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
 
-async def load_page(url):
+async def load_page(url,waitfor):
 
     async with async_playwright() as p:
 
@@ -38,6 +38,7 @@ async def load_page(url):
             viewport={'width': 1920, 'height': 1080}
         )
         await page.goto(url, timeout=60000)
+        await page.wait_for_selector(waitfor)
         html_content = await page.content()
         await browser.close()
 
@@ -91,7 +92,7 @@ url = urls['domain']
 print(urls)
 
 # Loading dashboard page having JavaScript
-hpsoup = asyncio.run(load_page(dashboard))
+hpsoup = asyncio.run(load_page(dashboard, "ipoTable"))
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -143,7 +144,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = asyncio.run(load_page(link))
+  pgsoup = asyncio.run(load_page(link, "ObjectiveIssue"))
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')

@@ -92,7 +92,7 @@ url = urls['domain']
 print(urls)
 
 # Loading dashboard page having JavaScript
-hpsoup = asyncio.run(load_page(dashboard, "ipoTable"))
+hpsoup = asyncio.run(load_page(dashboard, "#ipoTable"))
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -144,7 +144,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = asyncio.run(load_page(link, "ObjectiveIssue"))
+  pgsoup = asyncio.run(load_page(link, "#ObjectiveIssue"))
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')

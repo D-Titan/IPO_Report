@@ -2,3 +2,4 @@ beautifulsoup4
 Jinja2
 pandas
 playwright
+lxml

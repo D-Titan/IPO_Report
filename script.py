@@ -33,7 +33,10 @@ async def load_page(url):
     async with async_playwright() as p:
 
         browser = await p.chromium.launch()
-        page = await browser.new_page()
+        page = await browser.new_page(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+            viewport={'width': 1920, 'height': 1080}
+        )
         await page.goto(url, timeout=60000)
         html_content = await page.content()
         await browser.close()

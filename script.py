@@ -26,7 +26,7 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
-def load_page(url):
+def load_page(url, waitfor):
     soup = ""
     with sync_playwright() as p:
 
@@ -35,9 +35,9 @@ def load_page(url):
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
         )
         page = context.new_page()
-        page.goto(url, wait_until="networkidle")
+        page.goto(url, wait_until="domcontentloaded")
         #page.wait_for_timeout(5000)
-        #page.wait_for_selector(waitfor)
+        page.wait_for_selector(waitfor)
         html_content = page.content()
         soup = bs(html_content, 'html.parser')
 
@@ -87,14 +87,14 @@ dashboard = urls['dashboard']
 url = urls['domain']
 
 # Loading dashboard page having JavaScript
-hpsoup = load_page(dashboard)
+hpsoup = load_page(dashboard, waitfor = "#ipoTable tr")
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
 gmp = hpsoup.find('div', id = "gmpTable")
 sub = hpsoup.find('div', id = "liveSubscriptionTable")
 link = [(url + a['href']) for a in ipo.find('table').find_all('a')]
-
+print(ipo)
 ipoTable = pd.read_html(StringIO(str(ipo)))[0]
 gmpTable = pd.read_html(StringIO(str(gmp)))[0]
 subTable = pd.read_html(StringIO(str(sub)))[0]
@@ -139,15 +139,15 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = load_page(link)
+  pgsoup = load_page(link, waitfor = "#financialTable tr")
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')
   objectives = pgsoup.find('table', id = 'ObjectiveIssue')
-
+  print(financials)
   finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
   objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-
+  
   info = {}
   info['Refund Date'] = pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','')
   info['Allotment Date'] = pgsoup.find('td', attrs={'data-title':'Allotment Dt'}).string.replace('th','').replace('nd','')

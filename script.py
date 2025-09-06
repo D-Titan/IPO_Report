@@ -2,6 +2,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup as bs
 from io import StringIO
 from jinja2 import Template
+import time
 import pandas as pd
 import re
 
@@ -35,6 +36,7 @@ def load_page(url, waitfor):
             viewport={'width': 1920, 'height': 1080}
         )
         page.goto(url)
+        time.sleep(5)
         page.wait_for_selector(waitfor)
         html_content = page.content()
         browser.close()

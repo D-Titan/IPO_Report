@@ -10,9 +10,7 @@ import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import asyncio
-from playwright.async_api import async_playwright
-from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 import os
 import json
@@ -27,20 +25,18 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
+def load_page(url):
 
-async def load_page(url,waitfor):
+    with sync_playwright() as p:
 
-    async with async_playwright() as p:
-
-        browser = await p.chromium.launch()
-        page = await browser.new_page(
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
             viewport={'width': 1920, 'height': 1080}
         )
-        await page.goto(url, timeout=60000)
-        await page.wait_for_selector(waitfor)
-        html_content = await page.content()
-        await browser.close()
+        page.goto(url)
+        html_content = page.content()
+        browser.close()
 
         soup = BeautifulSoup(html_content, 'html.parser')
 
@@ -92,7 +88,7 @@ url = urls['domain']
 print(urls)
 
 # Loading dashboard page having JavaScript
-hpsoup = asyncio.run(load_page(dashboard, "#ipoTable"))
+hpsoup = load_page(dashboard)
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -144,7 +140,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = asyncio.run(load_page(link, "#ObjectiveIssue"))
+  pgsoup = load_page(link)
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')

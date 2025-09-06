@@ -38,7 +38,7 @@ def load_page(url):
         html_content = page.content()
         browser.close()
 
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = bs(html_content, 'html.parser')
 
     return soup
 

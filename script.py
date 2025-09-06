@@ -29,7 +29,7 @@ def load_page(url):
 
     with sync_playwright() as p:
 
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
             viewport={'width': 1920, 'height': 1080}

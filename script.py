@@ -26,7 +26,7 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
-def load_page(url, waitfor):
+def load_page(url):
     soup = ""
     with sync_playwright() as p:
 
@@ -35,14 +35,14 @@ def load_page(url, waitfor):
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
         )
         page = context.new_page()
-        page.goto(url)
-        page.wait_for_timeout(5000)
-        page.wait_for_selector(waitfor)
+        page.goto(url, wait_until="networkidle")
+        #page.wait_for_timeout(5000)
+        #page.wait_for_selector(waitfor)
         html_content = page.content()
         soup = bs(html_content, 'html.parser')
 
         browser.close()
-    return soup
+        return soup
 
 
 def send_email(template,total):
@@ -86,11 +86,8 @@ urls = json.loads(os.environ.get('URLS'))
 dashboard = urls['dashboard']
 url = urls['domain']
 
-"""debugging """
-print(urls)
-
 # Loading dashboard page having JavaScript
-hpsoup = load_page(dashboard,"#ipoTable")
+hpsoup = load_page(dashboard)
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -142,7 +139,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = load_page(link,"#financialTable")
+  pgsoup = load_page(link)
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')

@@ -39,10 +39,9 @@ def load_page(url, waitfor):
         time.sleep(5)
         page.wait_for_selector(waitfor)
         html_content = page.content()
-        browser.close()
-
         soup = bs(html_content, 'html.parser')
 
+        browser.close()
     return soup
 
 

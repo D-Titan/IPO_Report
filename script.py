@@ -2,7 +2,6 @@ from datetime import datetime
 from bs4 import BeautifulSoup as bs
 from io import StringIO
 from jinja2 import Template
-import time
 import pandas as pd
 import re
 
@@ -26,23 +25,31 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
-def load_page(url, waitfor):
-    soup = ""
+from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup as bs
+
+def load_page(url):
+
     with sync_playwright() as p:
 
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"]
         )
-        page = context.new_page()
-        page.goto(url, wait_until="domcontentloaded")
-        #page.wait_for_timeout(5000)
-        page.wait_for_selector(waitfor)
-        html_content = page.content()
-        soup = bs(html_content, 'html.parser')
-
+        
+        page = browser.new_page()
+        page.goto(url, wait_until="domcontentloaded")                         #go and wait till initial HTML get loaded
+        page.wait_for_timeout(2000)                                           #wait for 2s
+        page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)") #scroll to bottom
+        page.wait_for_timeout(2000)                                           #again wait for 2s
+        page.evaluate("() => window.scrollTo(0, 0)")                          #now scroll back to top
+        page.wait_for_timeout(5000)                                           #wait for 5s
+        html_content = page.content()                                         #load the new updated HTML
+        soup = bs(html_content, 'html.parser') 
         browser.close()
+        
         return soup
+
 
 
 def send_email(template,total):
@@ -79,7 +86,7 @@ def send_email(template,total):
 
 
 # today = datetime.today().date()
-today = datetime.strptime("18-08-2025","%d-%m-%Y")
+today = datetime.strptime("19-08-2025","%d-%m-%Y").date()
 
 #links
 urls = json.loads(os.environ.get('URLS'))
@@ -100,9 +107,6 @@ gmpTable = pd.read_html(StringIO(str(gmp)))[0]
 subTable = pd.read_html(StringIO(str(sub)))[0]
 
 ipoTable['link'] = link
-
-""" debugging """
-print(ipoTable)
 
 #Converting Date to Date objects
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, '%d-%m-%Y').date())

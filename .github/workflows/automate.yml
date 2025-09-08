@@ -33,5 +33,5 @@ jobs:
       run: python script.py
       env:
          SENDER: ${{secrets.SENDER}}
-         RECIEVERS: ${{secrets.RECIEVERS}}
+         RECIEVERS: ${{secrets.RECEIVERS}}
          URLS: ${{secrets.URLS}}

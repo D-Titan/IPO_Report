@@ -17,7 +17,7 @@ import json
 
 # Setup mailing details
 sender = json.loads(os.environ.get('SENDER'))
-recievers = json.loads(os.environ.get('RECIEVERS'))
+receivers = json.loads(os.environ.get('RECEIVERS'))
 
 SENDER_EMAIL = sender['email'] 
 SENDER_PASSWORD = sender['pass']
@@ -25,8 +25,6 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
-from playwright.sync_api import sync_playwright
-from bs4 import BeautifulSoup as bs
 
 def load_page(url):
 
@@ -85,8 +83,7 @@ def send_email(template,total):
         print(f"\nAn error occurred: {e}")
 
 
-# today = datetime.today().date()
-today = datetime.strptime("19-08-2025","%d-%m-%Y").date()
+today = datetime.today().date()
 
 #links
 urls = json.loads(os.environ.get('URLS'))
@@ -101,7 +98,7 @@ ipo = hpsoup.find('div', id = "ipoTable")
 gmp = hpsoup.find('div', id = "gmpTable")
 sub = hpsoup.find('div', id = "liveSubscriptionTable")
 link = [(url + a['href']) for a in ipo.find('table').find_all('a')]
-print(ipo)
+
 ipoTable = pd.read_html(StringIO(str(ipo)))[0]
 gmpTable = pd.read_html(StringIO(str(gmp)))[0]
 subTable = pd.read_html(StringIO(str(sub)))[0]
@@ -112,7 +109,7 @@ ipoTable['link'] = link
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, '%d-%m-%Y').date())
 ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, '%d-%m-%Y').date())
 
-#filter to open ipos only and if ipo table is null end process.
+#Filter for open IPOs only. If the IPO table is empty, the script will effectively end.
 ipoTable = ipoTable[ (ipoTable['Open'] <= today) & (ipoTable['Close'] >= today)]
 
 # Clearing other table's columns
@@ -128,13 +125,13 @@ gmpTableCurrent.reset_index(level= None, inplace = True, drop = True)
 subTableCurrent.reset_index(level = None, inplace = True, drop = True)
 ipoTable.reset_index(level = None, inplace = True, drop = True)
 
-#preparing Table[Name, Issue price, Issue size, GMP, Sub, Close] for Active IPOs
+#Preparing a combined table for active IPOs with columns: [Name, Issue price, Issue size, GMP, Sub, Close]
 ipoTable['IPO Price'] = gmpTableCurrent['IPO Price']
 ipoTable['Issue Size'] = subTableCurrent['Issue Size']
 ipoTable['GMP'] = gmpTableCurrent['GMP']
 ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
 
-#prepare dictionary moreInfo{company : {}}
+#Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
 moreInfo = {}
 
 for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
@@ -145,10 +142,10 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   # Loading the ipo page
   pgsoup = load_page(link)
 
-  # extracting informations
+  # Extracting information
   financials = pgsoup.find('table', id = 'financialTable')
   objectives = pgsoup.find('table', id = 'ObjectiveIssue')
-  print(financials)
+    
   finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
   objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
   
@@ -179,14 +176,14 @@ totalIpo = len(ipoTable)
 ipoTable = ipoTable.to_dict(orient='split')
 
 """
-variables used in template:
+Variables used in template:
 1. ipotable = ipoTable.to_dict(orient='split') where ipoTable has no links
 2. moreInfo as it is
 3. activeIPO = len(ipoTable)
 4. today = dtetime.now().date()
 """
 
-#convert all to formatted html string and merge with whole template
+#Render the collected information into an HTML email template.
 
 rawHTML = """
   <!DOCTYPE html>
@@ -343,13 +340,14 @@ rawHTML = """
   </body>
   </html>
 """
+
 template = Template(rawHTML)
 
-finalHTML = template.render(today=today,ipotable=ipoTable,moreInfo = moreInfo, activeIPO = totalIpo)
+finalHTML = template.render(today = today, ipotable = ipoTable, moreInfo = moreInfo, activeIPO = totalIpo)
 
 #send mails
 if totalIpo:
-  for email in recievers['emails']:
+  for email in receivers['emails']:
     RECEIVER_EMAIL = email
     send_email(finalHTML,totalIpo)
 else:

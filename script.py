@@ -94,7 +94,7 @@ dashboard = urls['dashboard']
 url = urls['domain']
 
 # Loading dashboard page having JavaScript
-hpsoup = load_page(dashboard, waitfor = "#ipoTable tr")
+hpsoup = load_page(dashboard)
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
@@ -143,7 +143,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   details = moreInfo[company]
 
   # Loading the ipo page
-  pgsoup = load_page(link, waitfor = "#financialTable tr")
+  pgsoup = load_page(link)
 
   # extracting informations
   financials = pgsoup.find('table', id = 'financialTable')

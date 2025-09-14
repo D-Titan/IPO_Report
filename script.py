@@ -82,8 +82,7 @@ def send_email(template,total):
         print(f"\nAn error occurred: {e}")
 
 
-# today = datetime.today().date()
-today = datetime.strptime('17-09-2025','%d-%m-%Y').date()
+today = datetime.today().date()
 
 #links
 urls = json.loads(os.environ.get('URLS'))
@@ -291,7 +290,7 @@ rawHTML = """
   {% endfor %}
   </tbody>
   </table>
-  <div class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 8px 4px; font-size: 10px;"> *Dates are tentative </div>
+  <div class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 8px 4px; font-size: 12px;"> *Dates are tentative </div>
   </div>
   </td>
   </tr>

@@ -291,7 +291,7 @@ rawHTML = """
   {% endfor %}
   </tbody>
   </table>
-  <div class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 4px 4px; font-size: 14px;"> *Dates are tentative </div>
+  <div class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 8px 4px; font-size: 10px;"> *Dates are tentative </div>
   </div>
   </td>
   </tr>

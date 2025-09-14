@@ -15,6 +15,7 @@ from playwright.sync_api import sync_playwright
 import os
 import json
 
+
 # Setup mailing details
 sender = json.loads(os.environ.get('SENDER'))
 receivers = json.loads(os.environ.get('RECEIVERS'))
@@ -47,8 +48,6 @@ def load_page(url):
         browser.close()
         
         return soup
-
-
 
 def send_email(template,total):
 
@@ -83,7 +82,8 @@ def send_email(template,total):
         print(f"\nAn error occurred: {e}")
 
 
-today = datetime.today().date()
+# today = datetime.today().date()
+today = datetime.strptime('17-09-2025','%d-%m-%Y').date()
 
 #links
 urls = json.loads(os.environ.get('URLS'))
@@ -115,7 +115,7 @@ ipoTable = ipoTable[ (ipoTable['Open'] <= today) & (ipoTable['Close'] >= today)]
 # Clearing other table's columns
 subTable['Issuer Company'] = subTable['Issuer Company'].str.replace(" BSE, NSE",'')       
 subTable['Issue Size'] = subTable['Issue Size'].str.replace('₹','').str.replace(" Cr",'') 
-subTable['Total Subscription'] = subTable['Total Subscription'].str.replace('x', '')      
+subTable['Total Subscription'] = (subTable['Total Subscription'].str.replace('x', '')).apply(float)     
 
 #Filtering Other Tables
 gmpTableCurrent = gmpTable[ gmpTable['Issuer Company'].isin(ipoTable['Issuer Company'])]
@@ -131,8 +131,13 @@ ipoTable['Issue Size'] = subTableCurrent['Issue Size']
 ipoTable['GMP'] = gmpTableCurrent['GMP']
 ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
 
+
+#Sorting table by Close (Ascending) and GMP (Descending)
+ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
+
 #Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
 moreInfo = {}
+issueSize = []
 
 for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
 
@@ -148,12 +153,24 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
     
   finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
   objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-  
+  objTable['Expected Amount (₹ in crores)'] = objTable['Expected Amount (₹ in crores)'].fillna('')
+   
   info = {}
-  info['Refund Date'] = pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','')
-  info['Allotment Date'] = pgsoup.find('td', attrs={'data-title':'Allotment Dt'}).string.replace('th','').replace('nd','')
-  info['Listing Date'] = pgsoup.find('td', attrs={'data-title':'Listing Dt'}).string.replace('th','').replace('nd','')
-  info['Lot size'] = pgsoup.find('td', attrs={"data-title" : "Market Lot"}).get_text()
+  fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
+  issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
+
+  if fresh:
+    info['Fresh Issue Size'] = fresh.get_text()
+  else:
+    info['Offer For Sale'] =  issue
+  
+  info['Lot size'] = pgsoup.find('td', attrs={"data-title" : "Market Lot"}).get_text()  
+  info['Refund Date*'] = pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','')
+  info['Allotment Date*'] = pgsoup.find('td', attrs={'data-title':'Allotment Dt'}).string.replace('th','').replace('nd','').replace('rd','')
+  info['Listing Date*'] = pgsoup.find('td', attrs={'data-title':'Listing Dt'}).string.replace('th','').replace('nd','').replace('rd','')
+
+  issueSize.append(issue) 
+
   try:
     info['Subscribed (in Retail category)'] = pgsoup.find('td', attrs={'data-title':'RII Offered'}).find_parent('table').find('tbody').find_all('tr')[-1].find('td',attrs={'data-title':re.compile(r'RII-Day\d')}).string
   except:
@@ -168,10 +185,14 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   about.pop(-1)
   moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':about}
 
+#preparing table for template
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 
 del ipoTable['link']
+ipoTable['Issue Size'] = issueSize
+ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna(0.0)
+
 totalIpo = len(ipoTable)
 ipoTable = ipoTable.to_dict(orient='split')
 
@@ -270,6 +291,7 @@ rawHTML = """
   {% endfor %}
   </tbody>
   </table>
+  <div class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 4px 4px; font-size: 14px;"> *Dates are tentative </div>
   </div>
   </td>
   </tr>

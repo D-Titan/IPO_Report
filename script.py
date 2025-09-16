@@ -26,7 +26,6 @@ RECEIVER_EMAIL = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
-
 def load_page(url):
 
     with sync_playwright() as p:
@@ -49,11 +48,11 @@ def load_page(url):
         
         return soup
 
-def send_email(template,total):
+def send_email(template,title):
 
     # Create the Email Message
     message = MIMEMultipart("alternative")
-    message["Subject"] = f"{total} IPOs are live"
+    message["Subject"] = title
     message["From"] = SENDER_EMAIL
     message["To"] = RECEIVER_EMAIL
 
@@ -94,12 +93,16 @@ hpsoup = load_page(dashboard)
 
 # Extracting:  ipo[Issuer Company, Open, Close]; sub[Issuer Name, Issue Price, sub]; GMP[Issue Price, gmp]
 ipo = hpsoup.find('div', id = "ipoTable")
+
+for div in ipo.find_all('div',attrs = {'title':'OpenDt'}):
+    if not div.get_text():
+        div.find_parent('tr').decompose()
+
 gmp = hpsoup.find('div', id = "gmpTable")
 sub = hpsoup.find('div', id = "liveSubscriptionTable")
 link = [(url + a['href']) for a in ipo.find('table').find_all('a')]
 
 ipoTable = pd.read_html(StringIO(str(ipo)))[0]
-ipoTable = ipoTable.dropna(subset=['Open'])
 gmpTable = pd.read_html(StringIO(str(gmp)))[0]
 subTable = pd.read_html(StringIO(str(sub)))[0]
 
@@ -135,6 +138,22 @@ ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
 #Sorting table by Close (Ascending) and GMP (Descending)
 ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
 
+closing = len(ipoTable[ipoTable['Close'] == today])
+starting = len(ipoTable[ipoTable['Open'] == today])
+totalIpo = len(ipoTable)
+
+title = ''
+
+if closing and opening:
+    title = f'{closing} IPOs are closing and {starting} are starting today'
+elif closing:
+    title = f'{closing} IPOs are closing today'
+elif starting:
+    title = f'{starting} IPOs are starting today'
+else:
+    title = f'{totalIpo} IPOs are live today'
+    
+
 #Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
 moreInfo = {}
 issueSize = []
@@ -152,6 +171,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   objectives = pgsoup.find('table', id = 'ObjectiveIssue')
     
   finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
+  finTable = finTable.fillna('')
   objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
   objTable['Expected Amount (₹ in crores)'] = objTable['Expected Amount (₹ in crores)'].fillna('')
    
@@ -193,7 +213,6 @@ del ipoTable['link']
 ipoTable['Issue Size'] = issueSize
 ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna(0.0)
 
-totalIpo = len(ipoTable)
 ipoTable = ipoTable.to_dict(orient='split')
 
 """
@@ -371,6 +390,6 @@ finalHTML = template.render(today = today, ipotable = ipoTable, moreInfo = moreI
 if totalIpo:
   for email in receivers['emails']:
     RECEIVER_EMAIL = email
-    send_email(finalHTML,totalIpo)
+    send_email(finalHTML,title)
 else:
   print("No IPOs are Live")

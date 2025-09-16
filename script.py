@@ -99,6 +99,7 @@ sub = hpsoup.find('div', id = "liveSubscriptionTable")
 link = [(url + a['href']) for a in ipo.find('table').find_all('a')]
 
 ipoTable = pd.read_html(StringIO(str(ipo)))[0]
+ipoTable = ipoTable.dropna(subset=['Open'])
 gmpTable = pd.read_html(StringIO(str(gmp)))[0]
 subTable = pd.read_html(StringIO(str(sub)))[0]
 

@@ -134,10 +134,6 @@ ipoTable['Issue Size'] = subTableCurrent['Issue Size']
 ipoTable['GMP'] = gmpTableCurrent['GMP']
 ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
 
-
-#Sorting table by Close (Ascending) and GMP (Descending)
-ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
-
 closing = len(ipoTable[ipoTable['Close'] == today])
 starting = len(ipoTable[ipoTable['Open'] == today])
 totalIpo = len(ipoTable)
@@ -204,6 +200,9 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   about.pop(-1)
   about.pop(-1)
   moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':about}
+
+#Sorting table by Close (Ascending) and GMP (Descending)
+ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
 
 #preparing table for template
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))

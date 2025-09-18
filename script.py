@@ -12,6 +12,9 @@ from email.mime.text import MIMEText
 
 from playwright.sync_api import sync_playwright
 
+from google import genai
+from google.genai import types
+
 import os
 import json
 
@@ -19,12 +22,16 @@ import json
 # Setup mailing details
 sender = json.loads(os.environ.get('SENDER'))
 receivers = json.loads(os.environ.get('RECEIVERS'))
+urls = json.loads(os.environ.get('URLS'))
+apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
 
 SENDER_EMAIL = sender['email'] 
 SENDER_PASSWORD = sender['pass']
 RECEIVER_EMAIL = ""  
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
+
+
 
 def load_page(url):
 
@@ -81,10 +88,53 @@ def send_email(template,title):
         print(f"\nAn error occurred: {e}")
 
 
+def summarize(content,api_key):
+  client = genai.Client(api_key = api_key)
+
+  config=types.GenerateContentConfig(
+          system_instruction="""
+You are an AI tasked with generating a concise HTML summary of a given company description.
+
+Your response MUST adhere to the following strict rules:
+1.  HTML ONLY: Your entire output must be a single HTML <div> element. Do not include '<html>', '<head>', '<body>' tags, or any other text outside this single '<div>'.
+2.  NO MARKDOWN: Do not use any Markdown formatting (e.g., ###, **text**, * text,  ```html```). All formatting must be done using HTML tags like '<b>', '<strong>', '<p>', and '<i>'.
+3.  CORE FOCUS: The summary must exclusively extract and present two key pieces of information:
+    - What the company does: Its core services, products, or mission.
+    - Who its customers are:** Its primary consumers, clients, or target market.
+    Keep phrasing neutral and factual (no marketing language, no adjectives like “best”, “leading”, or subjective claims).
+4.  CONCISE: Keep the text simple and to the point. Avoid jargon and extraneous details.  The entire <div> must be no more than 80 words total.
+5.  STRUCTURE: Use '<p>' tags to separate sections and '<b>' or '<strong>' tags to create bolded titles for each section(e.g., "Core Services:", "Primary Customers:") and '<ol>' for displaying list.
+
+example of output: 
+<div>
+  <p><b>text to bold: </b> text1</p>
+  <p><b>text to bold: </b> text2</p>
+  <p><b>text to bold: </b> 
+    <ol>
+      <li>item</li>
+      <li>item1</li>
+      <li>item2</li>
+    </ol>
+  </p>
+</div>
+
+do not provide ouput as a code snippet
+          """,
+          thinking_config=types.ThinkingConfig(thinking_budget=0), # Disables thinking
+          )
+  contents=f"""
+  Here is the company description you are to summarize:
+{content}
+  """
+  model = "gemini-2.5-flash-lite"
+
+  response = client.models.generate_content(model = model, config = config, contents = contents)
+  return response.text
+
+
 today = datetime.today().date()
 
 #links
-urls = json.loads(os.environ.get('URLS'))
 dashboard = urls['dashboard']
 url = urls['domain']
 
@@ -115,6 +165,7 @@ ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, '%d-%
 #Filter for open IPOs only. If the IPO table is empty, the script will effectively end.
 ipoTable = ipoTable[ (ipoTable['Open'] <= today) & (ipoTable['Close'] >= today)]
 
+
 # Clearing other table's columns
 subTable['Issuer Company'] = subTable['Issuer Company'].str.replace(" BSE, NSE",'')       
 subTable['Issue Size'] = subTable['Issue Size'].str.replace('₹','').str.replace(" Cr",'') 
@@ -129,10 +180,19 @@ subTableCurrent.reset_index(level = None, inplace = True, drop = True)
 ipoTable.reset_index(level = None, inplace = True, drop = True)
 
 #Preparing a combined table for active IPOs with columns: [Name, Issue price, Issue size, GMP, Sub, Close]
-ipoTable['IPO Price'] = gmpTableCurrent['IPO Price']
-ipoTable['Issue Size'] = subTableCurrent['Issue Size']
-ipoTable['GMP'] = gmpTableCurrent['GMP']
-ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
+ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'IPO Price']], on = 'Issuer Company', how = "left")
+ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Issue Size']], on = 'Issuer Company', how = "left")
+ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'GMP']], on = 'Issuer Company', how="left")
+ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Total Subscription']], on = 'Issuer Company', how = "left")
+
+# ipoTable['IPO Price'] = gmpTableCurrent['IPO Price']
+# ipoTable['Issue Size'] = subTableCurrent['Issue Size']
+# ipoTable['GMP'] = gmpTableCurrent['GMP']
+# ipoTable['Subscribed'] = subTableCurrent['Total Subscription']
+
+
+#Sorting table by Close (Ascending) and GMP (Descending)
+ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
 
 closing = len(ipoTable[ipoTable['Close'] == today])
 starting = len(ipoTable[ipoTable['Open'] == today])
@@ -140,15 +200,18 @@ totalIpo = len(ipoTable)
 
 title = ''
 
-if closing and opening:
-    title = f'{closing} IPOs are closing and {starting} are starting today'
-elif closing:
-    title = f'{closing} IPOs are closing today'
-elif starting:
-    title = f'{starting} IPOs are starting today'
+title_parts = []
+
+if closing:
+    title_parts.append(f"{closing} IPO{'s' if closing > 1 else ''} closing")
+if starting:
+    title_parts.append(f"{starting} IPO{'s' if starting > 1 else ''} starting")
+
+if title_parts:
+    title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
 else:
-    title = f'{totalIpo} IPOs are live today'
-    
+    title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
+
 
 #Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
 moreInfo = {}
@@ -169,7 +232,7 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
   finTable = finTable.fillna('')
   objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-  objTable['Expected Amount (₹ in crores)'] = objTable['Expected Amount (₹ in crores)'].fillna('')
+  objTable = objTable.fillna('')
    
   info = {}
   fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
@@ -188,21 +251,26 @@ for company, link in zip(ipoTable['Issuer Company'],ipoTable['link']):
   issueSize.append(issue) 
 
   try:
-    info['Subscribed (in Retail category)'] = pgsoup.find('td', attrs={'data-title':'RII Offered'}).find_parent('table').find('tbody').find_all('tr')[-1].find('td',attrs={'data-title':re.compile(r'RII-Day\d')}).string
+    info['Subscribed (RII)'] = pgsoup.find('td', attrs={'data-title':'RII Offered'}).find_parent('table').find('tbody').find_all('tr')[-1].find('td',attrs={'data-title':re.compile(r'RII-Day\d')}).string
   except:
-    info['Subscribed (in Retail category)'] = '0.0x'
+    info['Subscribed (RII)'] = '0.0x'
 
   infodf = pd.DataFrame(pd.Series(info))
   infodf.reset_index(level= None, inplace = True, drop = False)
-  about = list(pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings)
-  about.reverse()
-  about.pop(0)
-  about.pop(-1)
-  about.pop(-1)
-  moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':about}
 
-#Sorting table by Close (Ascending) and GMP (Descending)
-ipoTable = ipoTable.sort_values(by = ['Close','GMP'], ascending = [True,False])
+  about = """ """
+  for section in pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings:
+    about = section.get_text() + about
+
+  summary = summarize(about,apiKey)
+
+  # about = list(pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings)
+  # about.reverse()
+  # about.pop(0)
+  # about.pop(-1)
+  # about.pop(-1)
+
+  moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}
 
 #preparing table for template
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
@@ -210,8 +278,8 @@ ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m
 
 del ipoTable['link']
 ipoTable['Issue Size'] = issueSize
-ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna(0.0)
-
+ipoTable['Subscribed'] = ipoTable['Total Subscription'].fillna(0.0)
+ipoTable = ipoTable.rename(columns={'Total Subscription':'subscribed'})
 ipoTable = ipoTable.to_dict(orient='split')
 
 """
@@ -292,9 +360,7 @@ rawHTML = """
   <!-- About and Key Information Section -->
   <tr>
   <td width="55%" valign="top" class="details-description" style="font-size: 14px; line-height: 1.7; color: #57606F; padding-right: 25px;">
-  {% for p in moreInfo[row[0]]['about'] %}
-  <p style="margin-top:0; margin-bottom: 1em;">{{ p }}</p>
-  {% endfor %}
+    {{moreInfo[row[0]]['about']}}
   </td>
   <td width="45%" valign="top" style="padding-left: 15px;">
   <div class="data-card" style="background-color: #F7F8FA; border-radius: 8px; padding: 20px; border: 1px solid #EAEBEF;">

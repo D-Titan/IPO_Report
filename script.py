@@ -178,15 +178,16 @@ subTableCurrent = subTable[ subTable['Issuer Company'].isin(ipoTable['Issuer Com
 gmpTableCurrent.reset_index(level= None, inplace = True, drop = True)
 subTableCurrent.reset_index(level = None, inplace = True, drop = True)
 ipoTable.reset_index(level = None, inplace = True, drop = True)
-ipoTable['IPO Price'] = ipoTable['IPO Price'].apply(float)
+
 
 #Preparing a combined table for active IPOs with columns: [Name, Issue price, Issue size, GMP, Sub, Close]
 ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'IPO Price']], on = 'Issuer Company', how = "left")
 ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Issue Size']], on = 'Issuer Company', how = "left")
 ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'GMP']], on = 'Issuer Company', how="left")
 ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Total Subscription']], on = 'Issuer Company', how = "left")
+ipoTable['IPO Price'] = ipoTable['IPO Price'].apply(float)
 try:
-    ipoTable['GMP'] = (ipoTable['GMP'] * 100) / ipoTable['IPO Price']
+    ipoTable['GMP'] = ((ipoTable['GMP'] * 100) / ipoTable['IPO Price']).round(2)
 except:
     pass
 

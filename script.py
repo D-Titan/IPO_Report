@@ -169,7 +169,7 @@ ipoTable = ipoTable[ (ipoTable['Open'] <= today) & (ipoTable['Close'] >= today)]
 # Clearing other table's columns
 subTable['Issuer Company'] = subTable['Issuer Company'].str.replace(" BSE, NSE",'')       
 subTable['Issue Size'] = subTable['Issue Size'].str.replace('₹','').str.replace(" Cr",'') 
-subTable['Total Subscription'] = (subTable['Total Subscription'].str.replace('x', '')).apply(float)     
+subTable['Total Subscription'] = (subTable['Total Subscription'].str.replace('x', '')).apply(float)    
 
 #Filtering Other Tables
 gmpTableCurrent = gmpTable[ gmpTable['Issuer Company'].isin(ipoTable['Issuer Company'])]
@@ -178,12 +178,17 @@ subTableCurrent = subTable[ subTable['Issuer Company'].isin(ipoTable['Issuer Com
 gmpTableCurrent.reset_index(level= None, inplace = True, drop = True)
 subTableCurrent.reset_index(level = None, inplace = True, drop = True)
 ipoTable.reset_index(level = None, inplace = True, drop = True)
+ipoTable['IPO Price'] = ipoTable['IPO Price'].apply(float)
 
 #Preparing a combined table for active IPOs with columns: [Name, Issue price, Issue size, GMP, Sub, Close]
 ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'IPO Price']], on = 'Issuer Company', how = "left")
 ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Issue Size']], on = 'Issuer Company', how = "left")
 ipoTable = pd.merge(ipoTable, gmpTableCurrent[['Issuer Company', 'GMP']], on = 'Issuer Company', how="left")
 ipoTable = pd.merge(ipoTable, subTableCurrent[['Issuer Company', 'Total Subscription']], on = 'Issuer Company', how = "left")
+try:
+    ipoTable['GMP'] = (ipoTable['GMP'] * 100) / ipoTable['IPO Price']
+except:
+    pass
 
 # ipoTable['IPO Price'] = gmpTableCurrent['IPO Price']
 # ipoTable['Issue Size'] = subTableCurrent['Issue Size']
@@ -279,7 +284,7 @@ ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m
 del ipoTable['link']
 ipoTable['Issue Size'] = issueSize
 ipoTable['Subscribed'] = ipoTable['Total Subscription'].fillna(0.0)
-ipoTable = ipoTable.rename(columns={'Total Subscription':'subscribed'})
+ipoTable = ipoTable.rename(columns={'GMP':'GMP (%)','Total Subscription':'subscribed'})
 ipoTable = ipoTable.to_dict(orient='split')
 
 """

@@ -30,7 +30,7 @@ updateurl = urls['updateurl']
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = receivers
+RECEIVER_EMAIL = receivers["emails"]
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

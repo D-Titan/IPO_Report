@@ -565,7 +565,7 @@ rawHTML = """
 """
 
 template = Template(rawHTML)
-finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming))
+finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
 
 
 # Finally sending mails

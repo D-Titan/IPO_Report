@@ -1,4 +1,4 @@
-name: Get Reports
+name: Daily IPO Reports
 on:
  schedule:
   - cron : "0 3 * * *"
@@ -26,12 +26,9 @@ jobs:
       run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-    - name: Install Playwright Browsers
-      run: python -m playwright install --with-deps
 
     - name: Run script
-      run: python script.py
+      run: python DailyReports.py
       env:
          SENDER: ${{secrets.SENDER}}
          RECEIVERS: ${{secrets.RECEIVERS}}

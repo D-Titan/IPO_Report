@@ -18,7 +18,7 @@ from jinja2 import Template
 
 # Setup mailing details
 sender = json.loads(os.environ.get('SENDER'))
-receivers = json.loads(os.environ.get('RECEIVERS'))
+receivers = os.environ.get('RECEIVERS') #json.loads(os.environ.get('RECEIVERS'))
 urls = json.loads(os.environ.get('URLS'))
 url = urls['domain']
 reportApi = urls['reportApi']
@@ -27,7 +27,7 @@ updateurl = urls['updateurl']
 
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD =sender['pass']
-RECEIVER_EMAIL = list(receivers)
+RECEIVER_EMAIL = receivers if type(receivers) == type([]) else list(receivers)
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

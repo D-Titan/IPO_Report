@@ -4,7 +4,6 @@ on:
     inputs:
       email:
         description: 'Email on which updated report will be sent'
-        default: ''
         required: true
         
 

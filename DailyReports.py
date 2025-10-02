@@ -52,7 +52,7 @@ def send_email(template,title):
 
             i = 0
             for email in RECEIVER_EMAIL:
-
+              print(email)
               # Create the Email Message
               message = MIMEMultipart("alternative")
               message["Subject"] = title

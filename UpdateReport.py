@@ -53,7 +53,7 @@ def send_email(template,title):
               # Create the Email Message
               message = MIMEMultipart("alternative")
               message["Subject"] = title
-              message["From"] = SENDER_EMAIL
+              message["From"] = f'IPO REPORT <{SENDER_EMAIL}>'
               message["To"] = email
 
               # Attach the HTML body to the message

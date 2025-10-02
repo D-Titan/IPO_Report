@@ -52,8 +52,7 @@ def send_email(template,title):
 
             i = 0
             for email in RECEIVER_EMAIL:
-              print(email)
-              print(RECEIVER_EMAIL)
+                
               # Create the Email Message
               message = MIMEMultipart("alternative")
               message["Subject"] = title
@@ -64,6 +63,7 @@ def send_email(template,title):
               part = MIMEText(template.format(email=email), "html")
               message.attach(part)
 
+              # Send email
               server.sendmail(SENDER_EMAIL, email, message.as_string())
               i+=1
 

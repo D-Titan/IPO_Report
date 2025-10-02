@@ -9,7 +9,7 @@ on:
         
 
 jobs:
-  setUp:
+  UpdateReport:
    runs-on: ubuntu-latest
    
    steps:
@@ -32,4 +32,3 @@ jobs:
          SENDER: ${{secrets.SENDER}}
          RECEIVERS: ${{github.event.inputs.email}}
          URLS: ${{secrets.URLS}}
-         GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}

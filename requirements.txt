@@ -2,5 +2,4 @@ beautifulsoup4
 google-genai
 Jinja2
 pandas
-playwright
 lxml

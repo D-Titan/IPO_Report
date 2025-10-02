@@ -1,0 +1,35 @@
+name: Update IPO Report
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Email on which updated report will be sent'
+        default: ''
+        required: true
+        
+
+jobs:
+  setUp:
+   runs-on: ubuntu-latest
+   
+   steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+          python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+    - name: Run script
+      run: python UpdateReport.py
+      env:
+         SENDER: ${{secrets.SENDER}}
+         RECEIVERS: ${{github.event.inputs.email}}
+         URLS: ${{secrets.URLS}}
+         GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}

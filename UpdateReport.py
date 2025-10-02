@@ -27,7 +27,7 @@ updateurl = urls['updateurl']
 
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD =sender['pass']
-RECEIVER_EMAIL = receivers if type(receivers) == type([]) else list(receivers)
+RECEIVER_EMAIL = [receivers]
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

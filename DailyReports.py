@@ -223,13 +223,13 @@ for index,row in ipoTable.iterrows():
   financials = pgsoup.find('table', id = 'financialTable')
   objectives = pgsoup.find('table', id = 'ObjectiveIssue')
 
-  if finTable:
+  if financials:
       finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
       finTable = finTable.fillna('')
   else:
       finTable = pd.DataFrame()
 
-  if objTable:
+  if objectives:
       objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
       objTable = objTable.fillna('')
   else:

@@ -223,10 +223,17 @@ for index,row in ipoTable.iterrows():
   financials = pgsoup.find('table', id = 'financialTable')
   objectives = pgsoup.find('table', id = 'ObjectiveIssue')
 
-  finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
-  finTable = finTable.fillna('')
-  objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-  objTable = objTable.fillna('')
+  if finTable:
+      finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
+      finTable = finTable.fillna('')
+  else:
+      finTable = pd.DataFrame()
+
+  if objTable:
+      objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
+      objTable = objTable.fillna('')
+  else:
+      objTable = pd.DataFrame()  
 
   info = {}
   fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
@@ -408,6 +415,7 @@ rawHTML = """
                 <h3 style="margin-top: 0; margin-bottom: 18px; color: #2F3542;font-size:18px">
                 Financial Details
                 </h3>
+                {% if not moreInfo[row[0]]['fin'].empty %}
                 <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #bdc3c7; border-radius: 8px; overflow: hidden;" width="100%">
                 <thead>
                 <tr style="background-color: #ecf0f1">
@@ -430,14 +438,24 @@ rawHTML = """
                 {% endfor %}
                 </tbody>
                 </table>
+                {% else %}
+                <table>
+                  <tbody>
+                    <tr>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
                 </td>
               </tr>
+              {% endif %}
               <!-- Objectives Section -->
               <tr>
                 <td colspan="2" style="padding-top: 30px;">
                 <h3 style="margin-top: 0; margin-bottom: 18px; color: #2F3542; font-size:18px">
                 Objectives of IPO
                 </h3>
+                {% if not moreInfo[row[0]]['obj'].empty %}
                 <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #bdc3c7; border-radius: 8px; overflow: hidden;" width="100%">
                 <thead>
                 <tr style="background-color: #ecf0f1">
@@ -460,8 +478,24 @@ rawHTML = """
                 {% endfor %}
                 </tbody>
                 </table>
+                {% else %}
+                <tr>
+                <table>
+                  <tbody>
+                    <tr>
+                    <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; padding-right: 25px;" valign="top" width="100%">
+                    <p>
+                    The Company will not receive any proceeds from the Offer. All Offer Proceeds shall be received by the Selling Shareholder subsequent to the deduction of Offer-related expenses and applicable taxes, which shall be the responsibility of the Selling Shareholders.
+                    </p>
+                </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </tr>
+                {% endif %}
                 </td>
               </tr>
+
               </table>
           </div>
           </td>

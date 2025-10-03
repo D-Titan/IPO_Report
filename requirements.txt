@@ -3,3 +3,4 @@ google-genai
 Jinja2
 pandas
 lxml
+html5lib

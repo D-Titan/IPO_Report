@@ -152,7 +152,7 @@ if starting:
 if title_parts:
     title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
 else:
-    title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
+    title = f"{totalIpo} IPO{'s are' if totalIpo > 1 else ' is'} live today"
 
 
 # Converting Dates to string for better representation
@@ -457,7 +457,7 @@ noIPO = """
   </html>
 """
 
-if (len(upcoming) + len(upcoming)):
+if (len(ipoTable) + len(upcoming)):
   template = Template(availIPO)
   finalHTML = template.render(date = date, time = time, ipotable = ipotable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
   send_email(finalHTML,title)

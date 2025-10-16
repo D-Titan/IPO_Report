@@ -196,7 +196,7 @@ Variables used in template:
 #Render the collected information into an HTML email template.
 
 availIPO = """
-  <!DOCTYPE html>
+ <!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="utf-8"/>
@@ -214,18 +214,23 @@ availIPO = """
         <td align="center" style="padding: 0 10px;">
           <div class="header" style="padding: 50px 20px; text-align: center;">
           <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #2c3e50;">
-          Active IPO Report
+            Active IPO Report
           </h1>
+          {% if activeIPO !=0 %}
           <p style="margin: 10px 0 0; font-size: 16px; color: #57606F; line-height: 1.6;">
           As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
           </p>
+          {% endif %}
           </div>
           <!-- Main IPO Table inside its own Card -->
           <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
           <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(47, 53, 66, 0.08);">
+
           <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #EAEBEF; border-radius: 10px; overflow: hidden;" width="100%">
-              <thead>
+            
+            {% if activeIPO != 0 %}
+            <thead>
               <tr>
                 {% for data in ipotable['columns'] %}
                 <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #34495e; color: #ffffff; font-weight: 600; border: none;">
@@ -264,17 +269,29 @@ availIPO = """
               </tr>
               {% endfor %}
               </tbody>
+            {% else %}
+            <thead>
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #34495e; color: #ffffff; font-weight: 600; border: none;"></th>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; text-align: center; padding-right: 25px;">
+                    <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.</p>
+                </td>
+            </tr>
+            </tbody>
+            {% endif %}
           </table>
           </td>
           </tr>
           </table>
+
           <!-- Spacer -->
           <table border="0" cellpadding="0" cellspacing="0" width="100%">
           <tr>
           <td height="30" style="font-size: 30px; line-height: 30px;">
           </td>
           </tr>
-          </table>
 
           <!--- Upcoming Table --->
           <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -285,8 +302,9 @@ availIPO = """
           </div>
           <tr>
           <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(47, 53, 66, 0.08);">
-          {% if upcominglen != 0 %}
-              <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #EAEBEF; border-radius: 10px; overflow: hidden;" width="100%">
+
+            <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #EAEBEF; border-radius: 10px; overflow: hidden;" width="100%">
+            {% if upcominglen != 0 %}
                 <thead>
                 <tr>
                     {% for data in upcomingtable['columns'] %}
@@ -325,15 +343,20 @@ availIPO = """
                     </td>
                 </tr>
                 {% endfor %}
-                </tbody>
-              </table>
-          {% else %}
-          <tr>
-              <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; text-align: center; padding-right: 25px;" valign="top" width="100">
-                <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
-              </td>
-          </tr>
-          {% endif %}
+              </tbody>
+            {% else %}
+            <thead>
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #34495e; color: #ffffff; font-weight: 600; border: none;"></th>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; text-align: center; padding-right: 25px;">
+                    <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
+                </td>
+            </tr>
+            </tbody>
+            {% endif %}
+            </table>
 
           </td>
           </tr>
@@ -370,6 +393,7 @@ availIPO = """
     </table>
   </body>
   </html>
+
 """
 
 noIPO = """
@@ -390,7 +414,7 @@ noIPO = """
                 <!-- Header Section -->
                 <div class="header" style="padding: 50px 20px; text-align: center;">
                   <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #2c3e50;">
-                    IPO Status Report
+                    IPO Report
                   </h1>
                   <p style="margin: 10px 0 0; font-size: 16px; color: #57606F; line-height: 1.6;">
                     As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}

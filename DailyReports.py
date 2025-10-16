@@ -226,6 +226,7 @@ for index,row in ipoTable.iterrows():
   if financials:
       finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
       finTable = finTable.fillna('')
+      finTable = finTable.iloc[:-1]
   else:
       finTable = pd.DataFrame()
 
@@ -233,14 +234,14 @@ for index,row in ipoTable.iterrows():
       objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
       objTable = objTable.fillna('')
   else:
-      objTable = pd.DataFrame()  
+      objTable = pd.DataFrame() 
 
   info = {}
   fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
   issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
 
   info['PE'] = row['PE']
-  info['Subscribed (RII)'] = row['RII']
+  info['Subscribed (RII)'] = row['RII'] if row['RII'] else '0.0'
 
   if fresh:
     info['Fresh Issue Size'] = fresh.get_text()

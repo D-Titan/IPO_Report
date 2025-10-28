@@ -20,17 +20,41 @@ from jinja2 import Template
 
 # Fetching variables from environment
 sender = json.loads(os.environ.get('SENDER'))
-receivers = json.loads(os.environ.get('RECEIVERS'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
+brevoapi = json.loads(os.environ.get(BREVO_API))['api_key']
+
 url = urls['domain']
 reportApi = urls['reportApi']
 updateurl = urls['updateurl'] 
 
+brevo = "https://api.brevo.com/v3/contacts"
+
+headers = {
+    'api-key':brevoapi,
+    'accept':'application/json'
+}
+
+offset = 0
+count = 500
+params = {
+    'listid':4,
+    'limit':500,
+    'offset': offset
+}
+
+subs = []
+while count == 500 :
+  res = requests.get(brevo,headers = headers, params = params).content
+  response = json.loads(res)
+  subs += response.get('contacts', [])
+  count = response["count"]
+  offset += 500
+
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = receivers["emails"]
+RECEIVER_EMAIL = subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -51,7 +75,9 @@ def send_email(template,title):
             print("Sending email...")
 
             i = 0
-            for email in RECEIVER_EMAIL:
+            for item in RECEIVER_EMAIL:
+
+              email = item['email']
                 
               # Create the Email Message
               message = MIMEMultipart("alternative")
@@ -180,6 +206,13 @@ upcoming = upcoming.sort_values(by=['Close','GMP'], ascending=[True, False])
 upcoming['Open'] = upcoming['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+
+title2 = "No IPOs are live"
+
+if not subs:
+  ipoTable = ipoTable.drop(ipoTable.index)
+  title2 = "0 subscribers to send report"
+  
 
 # Preparing subject for email
 closing = len(ipoTable[ipoTable['Close'] == date])
@@ -607,4 +640,4 @@ finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreI
 if totalIpo:
   send_email(finalHTML,title)
 else:
-  print("No IPOs are Live")
+  print(title2)

@@ -22,7 +22,7 @@ from jinja2 import Template
 sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
-brevoapi = json.loads(os.environ.get(BREVO_API))['api_key']
+brevoapi = json.loads(os.environ.get('BREVO_API'))['api_key']
 
 url = urls['domain']
 reportApi = urls['reportApi']

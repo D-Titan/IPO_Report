@@ -31,6 +31,6 @@ jobs:
       run: python DailyReports.py
       env:
          SENDER: ${{secrets.SENDER}}
-         RECEIVERS: ${{secrets.RECEIVERS}}
+         BREVO_API: ${{secrets.BREVO_API}}
          URLS: ${{secrets.URLS}}
          GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}

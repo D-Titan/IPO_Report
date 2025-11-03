@@ -1,4 +1,6 @@
 name: For Subscribed And Demo Reports
 on:
  workflow_dispatch:
-
+  inputs:
+   ref:
+    default: 'main'

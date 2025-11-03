@@ -4,3 +4,13 @@ on:
   inputs:
    ref:
     default: 'main'
+ repository_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print custom payload data
+        run: |
+          echo "Received event type: ${{ github.event.action }}"
+          echo "Client payload data: ${{ github.event.client_payload.some_data }}"

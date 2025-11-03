@@ -1,1 +1,3 @@
-
+name: For Unsubscribed
+on:
+ workflow_dispatch:

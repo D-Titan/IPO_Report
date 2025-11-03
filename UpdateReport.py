@@ -106,7 +106,7 @@ subTable = Sub[subCols].rename(columns = subColsRenamed)
 gmpTable = Gmp[gmpCols].rename(columns = gmpColsRenamed)
 
 # Cleaning and transforming values
-ipoTable['IPO Size'] = ipoTable['IPO Size'].apply(lambda x: float(x.replace('&#8377;','').replace(' Cr','').replace(' Shares','')))
+ipoTable['IPO Size'] = ipoTable['IPO Size'].apply(lambda x: x.replace('&#8377;','').replace(' Cr','').replace(' Shares',''))
 ipoTable["Issuer Company"] = ipoTable["Issuer Company"].str.replace(' IPO','')
 ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
 ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())

@@ -206,22 +206,6 @@ availIPO = """
   </title>
 </head>
 <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
-  <!--
-  Theme Colors changed:
-  - Page background: #F7F8FA -> #f4f4f4 (light gray)
-  - Main text: #2F3542 -> #000000 (black)
-  - Headings: #2c3e50 -> #000000 (black)
-  - Subtext/Paragraphs: #57606F -> #333333 (dark gray)
-  - Card background: #ffffff (kept)
-  - Card shadow: rgba(47, 53, 66, 0.08) -> rgba(0, 0, 0, 0.08) (black shadow)
-  - Borders: #EAEBEF, #f0f0f0 -> #dddddd (gray)
-  - Main table header: #34495e -> #000000 (black)
-  - Table header text: #ffffff (kept)
-  - Table cell text: #555 (kept - already grayscale)
-  - Button background: #34495e -> #000000 (black)
-  - Button text: #ffffff (kept)
-  - Footer text: #8395A7 -> #777777 (medium gray)
-  -->
   <table border="0" cellpadding="0" cellspacing="0" width="100%">
   <tr>
   <td align="center" style="padding: 20px 0;">
@@ -395,12 +379,31 @@ availIPO = """
         </tr>
       </table>
 
-      <!--- Footer --->
-      <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #777777;">
-      <p>
-      This is an automated report. Do not reply to this email.
-      </p>
-      </div>
+        <!--- Footer --->
+        <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
+
+        <p>
+            <b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
+        </p>
+
+        <!-- Spacer -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+        <td height="40" style="font-size: 30px; line-height: 30px;">
+        </td>
+        </tr>
+        </table>
+
+        <p>
+          <b>
+            <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
+          </b>
+        </p>
+
+        <p>
+          This is an automated report. Do not reply to this email.
+        </p>
+        </div>
     </td>
     </tr>
   </table>
@@ -420,23 +423,6 @@ noIPO = """
   <title>IPO Status Report</title>
 </head>
 <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
-  <!--
-  Theme Colors changed:
-  - Page background: #F7F8FA -> #f4f4f4 (light gray)
-  - Main text: #2F3542 -> #000000 (black)
-  - Headings: #2c3e50 -> #000000 (black)
-  - Subtext/Paragraphs: #57606F -> #333333 (dark gray)
-  - Card background: #ffffff (kept)
-  - Card shadow: rgba(47, 53, 66, 0.08) -> rgba(0, 0, 0, 0.08) (black shadow)
-  - Borders: #EAEBEF -> #dddddd (gray)
-  - Main table header: #34495e -> #000000 (black)
-  - Table header text: #ffffff (kept)
-  - Table cell text: #555 (kept - already grayscale)
-  - Status text: #7f8c8d -> #666666 (medium gray)
-  - Button background: #34495e -> #000000 (black)
-  - Button text: #ffffff (kept)
-  - Footer text: #8395A7 -> #777777 (medium gray)
-  -->
   <table border="0" cellpadding="0" cellspacing="0" width="100%">
     <tr>
       <td align="center" style="padding: 20px 0;">
@@ -497,12 +483,31 @@ noIPO = """
                 </tr>
               </table>
 
-              <!-- Footer -->
-              <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #777777;">
+                <!--- Footer --->
+                <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
+        
+                <p>
+                    <b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
+                </p>
+        
+                <!-- Spacer -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                <td height="40" style="font-size: 30px; line-height: 30px;">
+                </td>
+                </tr>
+                </table>
+        
+                <p>
+                  <b>
+                    <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
+                  </b>
+                </p>
+        
                 <p>
                   This is an automated report. Do not reply to this email.
                 </p>
-              </div>
+                </div>
             </td>
           </tr>
         </table>

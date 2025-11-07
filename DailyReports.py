@@ -188,7 +188,7 @@ ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strptime(x, "
 gmpTable['GMP'] = gmpTable['GMP'].apply(lambda x: float(str(x if x != '' else '0')))
 subTable['Total'] = subTable['Total'].apply(lambda x: bs(x,'html.parser').find('b').get_text())
 subTable['Subscribed'] = subTable['Total'] + subTable['RII'].apply(lambda x: f' (RII: {x})')
-
+subTable['RII'] = subTable['RII'].fillna(0.0)
 
 #Filtering tables to keep Active and Upcoming IPOs
 upcoming = ipoTable[ipoTable['Open'] > date]
@@ -322,314 +322,314 @@ Variables used in template:
 #Render the collected information into an HTML email template.
 
 rawHTML = """
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>
-    Active IPO Report
-    </title>
-  </head>
-  <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #F7F8FA; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #2F3542;">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+  Active IPO Report
+  </title>
+</head>
+<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+  <td align="center" style="padding: 20px 0;">
+  <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
     <tr>
-    <td align="center" style="padding: 20px 0;">
-    <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
+    <td align="center" style="padding: 0 10px;">
+      <div class="header" style="padding: 50px 20px; text-align: center;">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+      Active IPO Report
+      </h1>
+      <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
+      As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
+      </p>
+      </div>
+      <!-- Main IPO Table inside its own Card -->
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+      <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+      <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+        <thead>
         <tr>
-        <td align="center" style="padding: 0 10px;">
-          <div class="header" style="padding: 50px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #2c3e50;">
-          Active IPO Report
-          </h1>
-          <p style="margin: 10px 0 0; font-size: 16px; color: #57606F; line-height: 1.6;">
-          As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
+          {% for data in ipotable['columns'] %}
+          <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+          {{data}}
+          </th>
+          {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in ipotable['data'] %}
+        <tr>
+          <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+          {{ row[0] }}
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[1] }}
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[2] }}
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[3] }}
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          ₹{{ row[4] }} Cr
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[5] }}
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[6] }}%
+          </td>
+          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+          {{ row[7] }}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </td>
+      </tr>
+      </table>
+      <!-- Spacer -->
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+      <td height="30" style="font-size: 30px; line-height: 30px;">
+      </td>
+      </tr>
+      </table>
+      <!-- Company Information Cards -->
+      {% for row in ipotable['data'] %}
+      <table border="0" cellpadding="0" cellspacing="0" class="company-card-container" width="100%">
+      <tr>
+      <td>
+      <div class="company-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); padding: 30px; margin-bottom: 25px; border: 1px solid #dddddd;">
+        <h3 style="margin-top: 0; margin-bottom: 20px; color: #000000; font-size: 24px; font-weight: 700;">
+        About {{row[0]}}
+        </h3>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <!-- About and Key Information Section -->
+        <tr>
+          <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="55%">
+          {{moreInfo[row[0]]['about']}}
+          </td>
+          <td style="padding-left: 15px;" valign="top" width="45%">
+          <div class="data-card" style="background-color: #eeeeee; border-radius: 8px; padding: 20px 20px 0px; border: 2px solid #cccccc;">
+          <h3 style="margin-top:0; margin-bottom: 18px; color: #000000; font-size: 18px">
+          Key Information
+          </h3>
+          <table border="0" cellpadding="0" cellspacing="0" class="nested-table" width="100%">
+          <tbody>
+            {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
+            <tr>
+            <td class="key" style="color: #000000; padding: 4px 4px; font-size: 14px;">
+              {{r[0]}}
+            </td>
+            <td class="value" style="color: #000000; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
+              {{r[1]}}
+            </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          </table>
+          <p class="value" style="color: #333333; font-weight: 450; text-align: right; padding: 4; font-size: 12px;">
+          <i>
+            *Dates are tentative
+          </i>
           </p>
           </div>
-          <!-- Main IPO Table inside its own Card -->
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
-          <tr>
-          <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(47, 53, 66, 0.08);">
-          <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #EAEBEF; border-radius: 10px; overflow: hidden;" width="100%">
-              <thead>
-              <tr>
-                {% for data in ipotable['columns'] %}
-                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #34495e; color: #ffffff; font-weight: 600; border: none;">
-                {{data}}
-                </th>
-                {% endfor %}
-              </tr>
-              </thead>
-              <tbody>
-              {% for row in ipotable['data'] %}
-              <tr>
-                <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #f0f0f0; color: #555;">
-                {{ row[0] }}
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[1] }}
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[2] }}
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[3] }}
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                ₹{{ row[4] }} Cr
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[5] }}
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[6] }}%
-                </td>
-                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                {{ row[7] }}
-                </td>
-              </tr>
-              {% endfor %}
-              </tbody>
-          </table>
           </td>
+        </tr>
+        <!-- Financial Details Section -->
+        <tr>
+          <td colspan="2" style="padding-top: 30px;">
+          <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000;font-size:18px">
+          Financial Details
+          </h3>
+          {% if not moreInfo[row[0]]['fin'].empty %}
+          <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
+          <thead>
+          <tr style="background-color: #eeeeee">
+            {% for col_name in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['columns'] %}
+            <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
+            {{ col_name }}
+            </th>
+            {% endfor %}
           </tr>
-          </table>
-          <!-- Spacer -->
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          </thead>
+          <tbody>
+          {% for fin_row in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['data'] %}
           <tr>
-          <td height="30" style="font-size: 30px; line-height: 30px;">
-          </td>
+            {% for data in fin_row %}
+            <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
+            {{ data }}
+            </td>
+            {% endfor %}
           </tr>
-          </table>
-          <!-- Company Information Cards -->
-          {% for row in ipotable['data'] %}
-          <table border="0" cellpadding="0" cellspacing="0" class="company-card-container" width="100%">
-          <tr>
-          <td>
-          <div class="company-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(47, 53, 66, 0.08); padding: 30px; margin-bottom: 25px; border: 1px solid #EAEBEF;">
-              <h3 style="margin-top: 0; margin-bottom: 20px; color: #2F3542; font-size: 24px; font-weight: 700;">
-              About {{row[0]}}
-              </h3>
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-              <!-- About and Key Information Section -->
-              <tr>
-                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; padding-right: 25px;" valign="top" width="55%">
-                {{moreInfo[row[0]]['about']}}
-                </td>
-                <td style="padding-left: 15px;" valign="top" width="45%">
-                <div class="data-card" style="background-color: #ebf1f2; border-radius: 8px; padding: 20px 20px 0px; border: 2px solid #bdc3c7;">
-                <h3 style="margin-top:0; margin-bottom: 18px; color: #2F3542; font-size: 18px">
-                Key Information
-                </h3>
-                <table border="0" cellpadding="0" cellspacing="0" class="nested-table" width="100%">
-                <tbody>
-                    {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
-                    <tr>
-                    <td class="key" style="color: #2c3e50; padding: 4px 4px; font-size: 14px;">
-                      {{r[0]}}
-                    </td>
-                    <td class="value" style="color: #2c3e50; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
-                      {{r[1]}}
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                </table>
-                <p class="value" style="color: #57606F; font-weight: 450; text-align: right; padding: 4; font-size: 12px;">
-                <i>
-                    *Dates are tentative
-                </i>
-                </p>
-                </div>
-                </td>
-              </tr>
-              <!-- Financial Details Section -->
-              <tr>
-                <td colspan="2" style="padding-top: 30px;">
-                <h3 style="margin-top: 0; margin-bottom: 18px; color: #2F3542;font-size:18px">
-                Financial Details
-                </h3>
-                {% if not moreInfo[row[0]]['fin'].empty %}
-                <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #bdc3c7; border-radius: 8px; overflow: hidden;" width="100%">
-                <thead>
-                <tr style="background-color: #ecf0f1">
-                    {% for col_name in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['columns'] %}
-                    <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #ecf0f1; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">
-                    {{ col_name }}
-                    </th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for fin_row in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['data'] %}
-                <tr>
-                    {% for data in fin_row %}
-                    <td style="padding: 12px 15px; border-bottom: 2px solid #ecf0f1; vertical-align: top; font-size: 16px;">
-                    {{ data }}
-                    </td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                {% else %}
-                <table>
-                  <tbody>
-                    <tr>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-                </td>
-              </tr>
-              {% endif %}
-              <!-- Objectives Section -->
-              <tr>
-                <td colspan="2" style="padding-top: 30px;">
-                <h3 style="margin-top: 0; margin-bottom: 18px; color: #2F3542; font-size:18px">
-                Objectives of IPO
-                </h3>
-                {% if not moreInfo[row[0]]['obj'].empty %}
-                <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #bdc3c7; border-radius: 8px; overflow: hidden;" width="100%">
-                <thead>
-                <tr style="background-color: #ecf0f1">
-                    {% for col_name in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['columns'] %}
-                    <th "="" style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #ecf0f1; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">
-                    {{ col_name }}
-                    </th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for obj_row in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['data'] %}
-                <tr>
-                    {% for data in obj_row %}
-                    <td style="padding: 12px 15px; border-bottom: 2px solid #ecf0f1; vertical-align: top; font-size: 16px;">
-                    {{ data }}
-                    </td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                {% else %}
-                <tr>
-                <table>
-                  <tbody>
-                    <tr>
-                    <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; padding-right: 25px;" valign="top" width="100%">
-                    <p>
-                    The Company will not receive any proceeds from the Offer. All Offer Proceeds shall be received by the Selling Shareholder subsequent to the deduction of Offer-related expenses and applicable taxes, which shall be the responsibility of the Selling Shareholders.
-                    </p>
-                </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </tr>
-                {% endif %}
-                </td>
-              </tr>
-
-              </table>
-          </div>
-          </td>
-          </tr>
-          </table>
           {% endfor %}
-
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
-          <div class="header" style="padding: 50px 20px 10px; text-align: center;">
-          <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #2c3e50;">
-          Upcoming IPOs
-          </h1>
-          </div>
+          </tbody>
+          </table>
+          {% else %}
+          <table>
+            <tbody>
+              <tr>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          </td>
+        </tr>
+        {% endif %}
+        <!-- Objectives Section -->
+        <tr>
+          <td colspan="2" style="padding-top: 30px;">
+          <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000; font-size:18px">
+          Objectives of IPO
+          </h3>
+          {% if not moreInfo[row[0]]['obj'].empty %}
+          <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
+          <thead>
+          <tr style="background-color: #eeeeee">
+            {% for col_name in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['columns'] %}
+            <th "="" style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
+            {{ col_name }}
+            </th>
+            {% endfor %}
+          </tr>
+          </thead>
+          <tbody>
+          {% for obj_row in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['data'] %}
           <tr>
-          <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(47, 53, 66, 0.08);">
-          {% if upcominglen != 0 %}
-              <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #EAEBEF; border-radius: 10px; overflow: hidden;" width="100%">
-                <thead>
-                <tr>
-                    {% for data in upcomingtable['columns'] %}
-                    <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #34495e; color: #ffffff; font-weight: 600; border: none;">
-                    {{data}}
-                    </th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for row in upcomingtable['data'] %}
-                <tr>
-                    <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #f0f0f0; color: #555;">
-                    {{ row[0] }}
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[1] }}
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[2] }}
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[3] }}
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    ₹{{ row[4] }} Cr
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[5] }}
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[6] }}%
-                    </td>
-                    <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #f0f0f0; color: #555; white-space: nowrap;">
-                    {{ row[7] }}
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-              </table>
+            {% for data in obj_row %}
+            <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
+            {{ data }}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          </tbody>
+          </table>
           {% else %}
           <tr>
-              <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #57606F; text-align: center; padding-right: 25px;" valign="top" width="100">
-                <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
-              </td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="100%">
+                <p>
+                The Company will not receive any proceeds from the Offer. All Offer Proceeds shall be received by the Selling Shareholder subsequent to the deduction of Offer-related expenses and applicable taxes, which shall be the responsibility of the Selling Shareholders.
+                </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           </tr>
           {% endif %}
-
           </td>
-          </tr>
-          </table>
-
-          <!-- Request Updated Info Button -->
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
-            <tr>
-              <td align="center" style="padding: 40px 0 30px;">
-                <table border="0" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td align="center" style="border-radius: 6px; background-color: #34495e;">
-                      <a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #34495e;">
-                        Request Updated IPO Information
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <!--- Footer --->
-          <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #8395A7;">
-          <p>
-          This is an automated report. Do not reply to this email.
-          </p>
-          </div>
-        </td>
         </tr>
-    </table>
+
+        </table>
+      </div>
+      </td>
+      </tr>
+      </table>
+      {% endfor %}
+
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <div class="header" style="padding: 50px 20px 10px; text-align: center;">
+      <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+      Upcoming IPOs
+      </h1>
+      </div>
+      <tr>
+      <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+      {% if upcominglen != 0 %}
+        <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+          <thead>
+          <tr>
+            {% for data in upcomingtable['columns'] %}
+            <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+            {{data}}
+            </th>
+            {% endfor %}
+          </tr>
+          </thead>
+          <tbody>
+          {% for row in upcomingtable['data'] %}
+          <tr>
+            <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+            {{ row[0] }}
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[1] }}
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[2] }}
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[3] }}
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            ₹{{ row[4] }} Cr
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[5] }}
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[6] }}%
+            </td>
+            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+            {{ row[7] }}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+      <tr>
+        <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;" valign="top" width="100">
+          <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
+        </td>
+      </tr>
+      {% endif %}
+
+      </td>
+      </tr>
+      </table>
+
+      <!-- Request Updated Info Button -->
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td align="center" style="padding: 40px 0 30px;">
+            <table border="0" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="border-radius: 6px; background-color: #000000;">
+                  <a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
+                    Request Updated IPO Information
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!--- Footer --->
+      <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #777777;">
+      <p>
+      This is an automated report. Do not reply to this email.
+      </p>
+      </div>
     </td>
     </tr>
-    </table>
-  </body>
-  </html>
+  </table>
+  </td>
+  </tr>
+  </table>
+</body>
+</html>
 """
 
 template = Template(rawHTML)

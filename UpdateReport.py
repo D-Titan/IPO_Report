@@ -385,7 +385,7 @@ availIPO = """
 							<table border="0" cellpadding="0" cellspacing="0">
 								<tr>
 									<td align="center" style="border-radius: 6px; background-color: #000000;">
-										<a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
+										<a id = "updateBtn" href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
 											Request Updated IPO Information
 										</a>
 									</td>
@@ -492,7 +492,7 @@ noIPO = """
 											<table border="0" cellpadding="0" cellspacing="0">
 												<tr>
 													<td align="center" style="border-radius: 6px; background-color: #000000;">
-														<a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
+														<a id = "updateBtn" href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
 															Request Updated IPO Information
 														</a>
 													</td>

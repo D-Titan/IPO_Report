@@ -23,6 +23,10 @@ sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
 brevoapi = json.loads(os.environ.get('BREVO_API'))['api_key']
+cache = json.loads(os.environ.get('cache'))
+
+cacheAPI = cache['cacheAPI']
+cacheURL = cache['cacheURL']
 
 url = urls['domain']
 reportApi = urls['reportApi']
@@ -658,7 +662,18 @@ template = Template(rawHTML)
 finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
 
 
-# Finally sending mails
+
+#Caching this report 
+headers = {
+    "Authorization": f"Bearer {cacheAPI}",
+    "Content-Type": "text/plain"
+}
+data = finalHTML
+
+cacheResponse = requests.put(cacheURL, headers=headers, data=data)
+print(cacheResponse.status_code)
+
+# Finally sending emails
 if totalIpo:
   send_email(finalHTML,title)
 else:

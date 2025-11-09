@@ -618,10 +618,10 @@ rawHTML = """
         </table>
 
         <!--- Footer --->
-        <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
+        <div class="footer" style="padding: 40px; text-align: left; font-size: 14px; color: #666666;">
 
-        <p>
-            <b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
+        <p style="color: #666666">
+            <b style="color:#444444">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
         </p>
 
         <!-- Spacer -->
@@ -634,7 +634,7 @@ rawHTML = """
 
         <p>
           <b>
-            <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
+            <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
           </b>
         </p>
 

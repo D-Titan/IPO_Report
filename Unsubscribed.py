@@ -64,8 +64,6 @@ content = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
     <meta name="x-apple-disable-message-reformatting">
-    <color-scheme content="light dark">
-    <supported-color-schemes>light dark</supported-color-schemes>
     <title>Unsubscribe Confirmation</title>
     <!--[if mso]>
     <xml>

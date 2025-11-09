@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 sender = json.loads(os.environ.get('SENDER'))
-receiver = json.loads(os.environ.get('RECEIVER'))
+receiver = os.environ.get('RECEIVER')
 
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD =sender['pass']

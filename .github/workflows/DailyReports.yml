@@ -28,3 +28,4 @@ jobs:
          BREVO_API: ${{secrets.BREVO_API}}
          URLS: ${{secrets.URLS}}
          GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}
+         cache: ${{secrets.cache}}

@@ -72,7 +72,7 @@ def send_email(template,title):
 
 
 
-if trigger_type == "demo":
+if trigger_type.lower() == "demo":
   content = bs(cache.content, "html.parser")
   updateBtn = content.find('a', id = "updateBtn")
   updateBtn.string = "Subscribe to Request Updated Report"
@@ -81,4 +81,4 @@ if trigger_type == "demo":
 else:
   content = cache.text
 
-send_email(content,"Thank you for Subscribing! Here is today's IPO Report." if trigger_type = 'subscribed' else "Here is your Demo IPO Report." )
+send_email(content,"Thank you for Subscribing! Here is today's IPO Report." if trigger_type.lower() == 'subscribed' else "Here is your Demo IPO Report." )

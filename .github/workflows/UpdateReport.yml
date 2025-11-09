@@ -1,10 +1,6 @@
 name: Update IPO Report
 on:
   workflow_dispatch:
-    inputs:
-      email:
-        description: 'Email on which updated report will be sent'
-        required: true
         
 
 jobs:
@@ -29,5 +25,5 @@ jobs:
       run: python UpdateReport.py
       env:
          SENDER: ${{secrets.SENDER}}
-         RECEIVERS: ${{github.event.inputs.email}}
+         db: ${{secrets.db}}
          URLS: ${{secrets.URLS}}

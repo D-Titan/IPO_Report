@@ -1,1 +1,16 @@
+name: UNSUBSCRIBED
+on:
+ workflow_dispatch:
+   inputs:
+     email:
+       required: true
+     trigger_type:
+       required: true
 
+jobs:
+  echo_trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Trigger Type
+        # Access the 'github.event_name' context variable
+        run: echo "The trigger type is:${{ inputs.trigger_type }}"

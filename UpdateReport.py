@@ -15,19 +15,35 @@ from email.mime.text import MIMEText
 from io import StringIO
 from jinja2 import Template
 
-
 # Setup mailing details
+
 sender = json.loads(os.environ.get('SENDER'))
-receivers = os.environ.get('RECEIVERS') #json.loads(os.environ.get('RECEIVERS'))
 urls = json.loads(os.environ.get('URLS'))
+db = json.loads(os.environ.get('db'))
+
 url = urls['domain']
 reportApi = urls['reportApi']
-updateurl = urls['updateurl'] 
+updateurl = urls['updateurl']
+dbUrl = db['dburl']
+dbApikey = db['dbApikey']
 
+dbheaders={
+	"apikey":dbApikey,
+	"Authorization": f"Bearer {dbApikey}",
+	"Content-Type":"application/json"
+}
+
+dbquery_params = {
+        "select": "id,email",  # The "SELECT" part
+        "processed": "eq.FALSE"    # The "WHERE" part
+}
+
+response = requests.get(dbUrl, headers = dbheaders, params=dbquery_params)
+receivers = pd.DataFrame(response.json())
 
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD =sender['pass']
-RECEIVER_EMAIL = [receivers]
+RECEIVER_EMAIL = receivers['email'] if not receivers.empty else pd.Series()
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -185,345 +201,355 @@ upcoming = upcoming[['Issuer Company', 'Open', 'Close', 'BoA', 'IPO Size', 'IPO 
 upcomingtable = upcoming.to_dict(orient='split')
 
 """
-Variables used in template:
-1. ipotable = ipoTable.to_dict(orient='split') where ipoTable has no links
-2. moreInfo as it is
-3. activeIPO = len(ipoTable)
-4. date = dtetime.now().date()
-5. upcomingtable = upcoming.to_dict(orient='split)
+	Variables used in template:
+	1. ipotable = ipoTable.to_dict(orient='split') where ipoTable has no links
+	2. moreInfo as it is
+	3. activeIPO = len(ipoTable)
+	4. date = dtetime.now().date()
+	5. upcomingtable = upcoming.to_dict(orient='split)
 """
 
 #Render the collected information into an HTML email template.
 
 availIPO = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-  Active IPO Report
-  </title>
-</head>
-<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
-  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-  <tr>
-  <td align="center" style="padding: 20px 0;">
-  <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
-    <tr>
-    <td align="center" style="padding: 0 10px;">
-      <div class="header" style="padding: 50px 20px; text-align: center;">
-      <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-        Active IPO Report
-      </h1>
-      {% if activeIPO !=0 %}
-      <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
-      As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
-      </p>
-      {% endif %}
-      </div>
-      <!-- Main IPO Table inside its own Card -->
-      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-      <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+		<title>
+		Active IPO Report
+		</title>
+	</head>
+	<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
+		<table border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tr>
+		<td align="center" style="padding: 20px 0;">
+		<table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
+			<tr>
+			<td align="center" style="padding: 0 10px;">
+				<div class="header" style="padding: 50px 20px; text-align: center;">
+				<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+					Active IPO Report
+				</h1>
+				{% if activeIPO !=0 %}
+				<p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
+				As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
+				</p>
+				{% endif %}
+				</div>
+				<!-- Main IPO Table inside its own Card -->
+				<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+				<td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
 
-      <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
-        
-      {% if activeIPO != 0 %}
-      <thead>
-        <tr>
-          {% for data in ipotable['columns'] %}
-          <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
-          {{data}}
-          </th>
-          {% endfor %}
-        </tr>
-        </thead>
-        <tbody>
-        {% for row in ipotable['data'] %}
-        <tr>
-          <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
-          {{ row[0] }}
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[1] }}
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[2] }}
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[3] }}
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          ₹{{ row[4] }} Cr
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[5] }}
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[6] }}%
-          </td>
-          <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-          {{ row[7] }}
-          </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      {% else %}
-      <thead>
-          <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
-      </thead>
-      <tbody>
-      <tr>
-          <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
-              <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.</p>
-          </td>
-      </tr>
-      </tbody>
-      {% endif %}
-      </table>
-      </td>
-      </tr>
-      </table>
+				<table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+					
+				{% if activeIPO != 0 %}
+				<thead>
+					<tr>
+						{% for data in ipotable['columns'] %}
+						<th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+						{{data}}
+						</th>
+						{% endfor %}
+					</tr>
+					</thead>
+					<tbody>
+					{% for row in ipotable['data'] %}
+					<tr>
+						<td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+						{{ row[0] }}
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[1] }}
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[2] }}
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[3] }}
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						₹{{ row[4] }} Cr
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[5] }}
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[6] }}%
+						</td>
+						<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+						{{ row[7] }}
+						</td>
+					</tr>
+					{% endfor %}
+					</tbody>
+				{% else %}
+				<thead>
+						<th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
+				</thead>
+				<tbody>
+				<tr>
+						<td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
+								<p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.</p>
+						</td>
+				</tr>
+				</tbody>
+				{% endif %}
+				</table>
+				</td>
+				</tr>
+				</table>
 
-      <!-- Spacer -->
-      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-      <tr>
-      <td height="30" style="font-size: 30px; line-height: 30px;">
-      </td>
-      </tr>
+				<!-- Spacer -->
+				<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+				<td height="30" style="font-size: 30px; line-height: 30px;">
+				</td>
+				</tr>
 
-      <!--- Upcoming Table --->
-      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-      <div class="header" style="padding: 50px 20px 10px; text-align: center;">
-      <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-      Upcoming IPOs
-      </h1>
-      </div>
-      <tr>
-      <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+				<!--- Upcoming Table --->
+				<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<div class="header" style="padding: 50px 20px 10px; text-align: center;">
+				<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+				Upcoming IPOs
+				</h1>
+				</div>
+				<tr>
+				<td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
 
-        <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
-        {% if upcominglen != 0 %}
-          <thead>
-          <tr>
-            {% for data in upcomingtable['columns'] %}
-            <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
-            {{data}}
-            </th>
-            {% endfor %}
-          </tr>
-          </thead>
-          <tbody>
-          {% for row in upcomingtable['data'] %}
-          <tr>
-            <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
-            {{ row[0] }}
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[1] }}
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[2] }}
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[3] }}
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            ₹{{ row[4] }} Cr
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[5] }}
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[6] }}%
-            </td>
-            <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-            {{ row[7] }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      {% else %}
-      <thead>
-          <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
-      </thead>
-      <tbody>
-      <tr>
-          <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
-              <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
-          </td>
-      </tr>
-      </tbody>
-      {% endif %}
-      </table>
+					<table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+					{% if upcominglen != 0 %}
+						<thead>
+						<tr>
+							{% for data in upcomingtable['columns'] %}
+							<th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+							{{data}}
+							</th>
+							{% endfor %}
+						</tr>
+						</thead>
+						<tbody>
+						{% for row in upcomingtable['data'] %}
+						<tr>
+							<td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+							{{ row[0] }}
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[1] }}
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[2] }}
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[3] }}
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							₹{{ row[4] }} Cr
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[5] }}
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[6] }}%
+							</td>
+							<td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+							{{ row[7] }}
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				{% else %}
+				<thead>
+						<th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
+				</thead>
+				<tbody>
+				<tr>
+						<td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
+								<p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs</p>
+						</td>
+				</tr>
+				</tbody>
+				{% endif %}
+				</table>
 
-      </td>
-      </tr>
-      </table>
+				</td>
+				</tr>
+				</table>
 
-      <!-- Request Updated Info Button -->
-      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-          <td align="center" style="padding: 40px 0 30px;">
-            <table border="0" cellpadding="0" cellspacing="0">
-              <tr>
-                <td align="center" style="border-radius: 6px; background-color: #000000;">
-                  <a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
-                    Request Updated IPO Information
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
+				<!-- Request Updated Info Button -->
+				<table border="0" cellpadding="0" cellspacing="0" width="100%">
+					<tr>
+						<td align="center" style="padding: 40px 0 30px;">
+							<table border="0" cellpadding="0" cellspacing="0">
+								<tr>
+									<td align="center" style="border-radius: 6px; background-color: #000000;">
+										<a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
+											Request Updated IPO Information
+										</a>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
 
-        <!--- Footer --->
-        <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
+					<!--- Footer --->
+					<div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
 
-        <p>
-            <b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
-        </p>
+					<p>
+							<b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
+					</p>
 
-        <!-- Spacer -->
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-        <td height="40" style="font-size: 30px; line-height: 30px;">
-        </td>
-        </tr>
-        </table>
+					<!-- Spacer -->
+					<table border="0" cellpadding="0" cellspacing="0" width="100%">
+					<tr>
+					<td height="40" style="font-size: 30px; line-height: 30px;">
+					</td>
+					</tr>
+					</table>
 
-        <p>
-          <b>
-            <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
-          </b>
-        </p>
+					<p>
+						<b>
+							<a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
+						</b>
+					</p>
 
-        <p>
-          This is an automated report. Do not reply to this email.
-        </p>
-        </div>
-    </td>
-    </tr>
-  </table>
-  </td>
-  </tr>
-  </table>
-</body>
-</html>
+					<p>
+						This is an automated report. Do not reply to this email.
+					</p>
+					</div>
+			</td>
+			</tr>
+		</table>
+		</td>
+		</tr>
+		</table>
+	</body>
+	</html>
 """
 
 noIPO = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>IPO Status Report</title>
-</head>
-<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
-  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-    <tr>
-      <td align="center" style="padding: 20px 0;">
-        <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
-          <tr>
-            <td align="center" style="padding: 0 10px;">
-              <!-- Header Section -->
-              <div class="header" style="padding: 50px 20px; text-align: center;">
-                <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-                  IPO Report
-                </h1>
-                <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
-                  As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}
-                </p>
-              </div>
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+		<title>IPO Status Report</title>
+	</head>
+	<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
+		<table border="0" cellpadding="0" cellspacing="0" width="100%">
+			<tr>
+				<td align="center" style="padding: 20px 0;">
+					<table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
+						<tr>
+							<td align="center" style="padding: 0 10px;">
+								<!-- Header Section -->
+								<div class="header" style="padding: 50px 20px; text-align: center;">
+									<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+										IPO Report
+									</h1>
+									<p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
+										As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}
+									</p>
+								</div>
 
-              <!-- Status Card -->
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
-                    <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
-                      <thead>
-                        <tr>
-                          <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td style="padding: 40px 15px; vertical-align: top; font-size: 16px; text-align: center; color: #555;">
-                            <h3 style="margin: 0 0 20px; color: #000000; font-size: 22px;">
-                              No IPOs Currently Active or Upcoming
-                            </h3>
-                            <p style="margin: 0; color: #666666; line-height: 1.6;">
-                              There are 0 active IPOs trading in the market and 0 upcoming IPOs scheduled for launch.
-                            </p>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+								<!-- Status Card -->
+								<table border="0" cellpadding="0" cellspacing="0" width="100%">
+									<tr>
+										<td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+											<table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+												<thead>
+													<tr>
+														<th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td style="padding: 40px 15px; vertical-align: top; font-size: 16px; text-align: center; color: #555;">
+															<h3 style="margin: 0 0 20px; color: #000000; font-size: 22px;">
+																No IPOs Currently Active or Upcoming
+															</h3>
+															<p style="margin: 0; color: #666666; line-height: 1.6;">
+																There are 0 active IPOs trading in the market and 0 upcoming IPOs scheduled for launch.
+															</p>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+									</tr>
+								</table>
 
-              <!-- Request Updated Info Button -->
-              <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td align="center" style="padding: 40px 0 30px;">
-                    <table border="0" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td align="center" style="border-radius: 6px; background-color: #000000;">
-                          <a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
-                            Request Updated IPO Information
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+								<!-- Request Updated Info Button -->
+								<table border="0" cellpadding="0" cellspacing="0" width="100%">
+									<tr>
+										<td align="center" style="padding: 40px 0 30px;">
+											<table border="0" cellpadding="0" cellspacing="0">
+												<tr>
+													<td align="center" style="border-radius: 6px; background-color: #000000;">
+														<a href="{{updateurl}}" target="_blank" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;">
+															Request Updated IPO Information
+														</a>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
 
-                <!--- Footer --->
-                <div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
-        
-                <p>
-                    <b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
-                </p>
-        
-                <!-- Spacer -->
-                <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                <td height="40" style="font-size: 30px; line-height: 30px;">
-                </td>
-                </tr>
-                </table>
-        
-                <p>
-                  <b>
-                    <a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
-                  </b>
-                </p>
-        
-                <p>
-                  This is an automated report. Do not reply to this email.
-                </p>
-                </div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+									<!--- Footer --->
+									<div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
+					
+									<p>
+											<b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
+									</p>
+					
+									<!-- Spacer -->
+									<table border="0" cellpadding="0" cellspacing="0" width="100%">
+									<tr>
+									<td height="40" style="font-size: 30px; line-height: 30px;">
+									</td>
+									</tr>
+									</table>
+					
+									<p>
+										<b>
+											<a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
+										</b>
+									</p>
+					
+									<p>
+										This is an automated report. Do not reply to this email.
+									</p>
+									</div>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+	</html>
 """
+if not RECEIVER_EMAIL.empty:
+	if (len(ipoTable) + len(upcoming)):
+		template = Template(availIPO)
+		finalHTML = template.render(date = date, time = time, ipotable = ipotable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
+		send_email(finalHTML,title)
 
-if (len(ipoTable) + len(upcoming)):
-  template = Template(availIPO)
-  finalHTML = template.render(date = date, time = time, ipotable = ipotable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
-  send_email(finalHTML,title)
+	else:
+		template = Template(noIPO)
+		finalHTML = template.render(date= date, time = time, updateurl = updateurl)
+		send_email(finalHTML,"No Active or Upcoming IPOs")
+
+	qp= {
+			"id":f"in.({",".join([ str(id) for id in list(receivers['id']) ])})"
+	}
+
+	response2 = requests.delete(dbUrl, headers=dbheaders, params=qp )
+	print(response2.status_code)
 
 else:
-  template = Template(noIPO)
-  finalHTML = template.render(date= date, time = time, updateurl = updateurl)
-  send_email(finalHTML,"No Active or Upcoming IPOs")
+	print("QUEUE is Empty!")

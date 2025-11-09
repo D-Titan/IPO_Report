@@ -394,32 +394,35 @@ availIPO = """
 						</td>
 					</tr>
 				</table>
-
-					<!--- Footer --->
-					<div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
-
-					<p>
-							<b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
-					</p>
-
-					<!-- Spacer -->
-					<table border="0" cellpadding="0" cellspacing="0" width="100%">
-					<tr>
-					<td height="40" style="font-size: 30px; line-height: 30px;">
-					</td>
-					</tr>
-					</table>
-
-					<p>
-						<b>
-							<a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
-						</b>
-					</p>
-
-					<p>
-						This is an automated report. Do not reply to this email.
-					</p>
-					</div>
+				
+	        <!-- FOOTER START-->
+	        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px;">
+	            <tr>
+	                <td align="center" style="padding: 0 20px 50px 20px;">
+	                    <!-- Thick Separator Line -->
+	                    <div style="height: 4px; width: 100%; background-color: #000000; max-width: 100px; margin-bottom: 30px;"></div>
+	
+	                    <!-- Navigation Links -->
+	                    <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+	                        <a href="#Disclaimer" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
+	                        <span style="padding: 0 25px; color: #cccccc;">|</span>
+	                        <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Unsubscribe</a>
+	                    </p>
+	
+	                    <!-- Disclaimer Text -->
+	                    <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
+	                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+	                    </p>
+	
+	                    <!-- Automated Note -->
+	                    <p style="margin: 0; font-size: 12px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 0.5px;">
+	                        This is an automated report &mdash; please do not reply.
+	                    </p>
+	                </td>
+	            </tr>
+	        </table>
+	        <!--- FOOTER END --->
+			
 			</td>
 			</tr>
 		</table>
@@ -499,31 +502,34 @@ noIPO = """
 									</tr>
 								</table>
 
-									<!--- Footer --->
-									<div class="footer" style="padding: 40px; text-align: center; font-size: 14px; color: #444444;">
-					
-									<p>
-											<b style="color:#000000">Disclaimer: </b>This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and offical websites of respective companies. Read to full Disclaimer below.
-									</p>
-					
-									<!-- Spacer -->
-									<table border="0" cellpadding="0" cellspacing="0" width="100%">
-									<tr>
-									<td height="40" style="font-size: 30px; line-height: 30px;">
-									</td>
-									</tr>
-									</table>
-					
-									<p>
-										<b>
-											<a href="#Disclaimer" style="text-decoration: none; color: #000000; font-size:16;">Disclaimer</a>  &nbsp; &nbsp;&nbsp; &nbsp;  <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000;font-size:16;">Unsubscribe</a>
-										</b>
-									</p>
-					
-									<p>
-										This is an automated report. Do not reply to this email.
-									</p>
-									</div>
+						        <!-- FOOTER START-->
+						        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px;">
+						            <tr>
+						                <td align="center" style="padding: 0 20px 50px 20px;">
+						                    <!-- Thick Separator Line -->
+						                    <div style="height: 4px; width: 100%; background-color: #000000; max-width: 100px; margin-bottom: 30px;"></div>
+						
+						                    <!-- Navigation Links -->
+						                    <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+						                        <a href="#Disclaimer" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
+						                        <span style="padding: 0 25px; color: #cccccc;">|</span>
+						                        <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Unsubscribe</a>
+						                    </p>
+						
+						                    <!-- Disclaimer Text -->
+						                    <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
+						                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+						                    </p>
+						
+						                    <!-- Automated Note -->
+						                    <p style="margin: 0; font-size: 12px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 0.5px;">
+						                        This is an automated report &mdash; please do not reply.
+						                    </p>
+						                </td>
+						            </tr>
+						        </table>
+						        <!--- FOOTER END --->
+			
 							</td>
 						</tr>
 					</table>

@@ -74,12 +74,12 @@ def send_email(template,title):
 
 
 if trigger_type.lower() == "demo":
-  content = bs(cache.content, "html.parser")
+  content = bs(cacheResponse.content, "html.parser")
   updateBtn = content.find('a', id = "updateBtn")
   updateBtn.string = "Subscribe to Request Updated Report"
   updateBtn['href'] = "https://iporeports.webflow.com/#subscribe"
   content = str(content)
 else:
-  content = cache.text
+  content = cacheResponse.text
 
 send_email(content,"Thank you for Subscribing! Here is today's IPO Report." if trigger_type.lower() == 'subscribed' else "Here is your Demo IPO Report." )

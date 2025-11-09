@@ -24,7 +24,7 @@ db = json.loads(os.environ.get('db'))
 url = urls['domain']
 reportApi = urls['reportApi']
 updateurl = urls['updateurl']
-dbUrl = db['dburl']
+dbUrl = db['dbUrl']
 dbApikey = db['dbApikey']
 
 dbheaders={

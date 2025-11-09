@@ -56,7 +56,7 @@ def send_email(template,title):
               message["To"] = email
 
               # Attach the HTML body to the message
-              part = MIMEText(template.format(email) if trigger_type = "subscribed" else template, "html")
+              part = MIMEText(template.format(email) if trigger_type.lower() == "subscribed" else template, "html")
               message.attach(part)
 
               server.sendmail(SENDER_EMAIL, email, message.as_string())

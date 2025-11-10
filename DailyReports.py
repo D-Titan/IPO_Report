@@ -215,7 +215,6 @@ upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"
 title2 = "No IPOs are live"
 
 if not subs:
-  ipoTable = ipoTable.drop(ipoTable.index)
   title2 = "0 subscribers to send report"
   
 
@@ -356,6 +355,8 @@ rawHTML = """
         <tr>
         <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
         <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+         
+          {% if activeIPO != 0 %}
           <thead>
           <tr>
             {% for data in ipotable['columns'] %}
@@ -395,6 +396,18 @@ rawHTML = """
           </tr>
           {% endfor %}
           </tbody>
+        {% else %}
+                <thead>
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;"></th>
+        </thead>
+        <tbody>
+        <tr>
+                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
+                        <p>As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.</p>
+                </td>
+        </tr>
+        </tbody>
+        {% endif %}
         </table>
         </td>
         </tr>
@@ -406,7 +419,9 @@ rawHTML = """
         </td>
         </tr>
         </table>
+        
         <!-- Company Information Cards -->
+        {% if activeIPO != 0 %}
         {% for row in ipotable['data'] %}
         <table border="0" cellpadding="0" cellspacing="0" class="company-card-container" width="100%">
         <tr>
@@ -541,6 +556,7 @@ rawHTML = """
         </tr>
         </table>
         {% endfor %}
+        {% endif %}
 
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <div class="header" style="padding: 50px 20px 10px; text-align: center;">

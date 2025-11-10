@@ -446,7 +446,7 @@ rawHTML = """
               {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
               <tr>
               <td class="key" style="color: #000000; padding: 4px 4px; font-size: 14px;">
-                {{r[0]}}
+                {{r[0].replace("*",'')}}
               </td>
               <td class="value" style="color: #000000; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
                 {{r[1]}}
@@ -455,11 +455,6 @@ rawHTML = """
               {% endfor %}
             </tbody>
             </table>
-            <p class="value" style="color: #333333; font-weight: 450; text-align: right; padding: 4; font-size: 12px;">
-            <i>
-              *Dates are tentative
-            </i>
-            </p>
             </div>
             </td>
           </tr>

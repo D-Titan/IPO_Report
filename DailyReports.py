@@ -452,6 +452,7 @@ rawHTML = """
                 {{r[1]}}
               </td>
               </tr>
+              <div style="padding: 4px 4px"></div>
               {% endfor %}
             </tbody>
             </table>

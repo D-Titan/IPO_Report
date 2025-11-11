@@ -42,7 +42,7 @@ headers = {
 offset = 0
 count = 500
 params = {
-    'listid':4,
+    'listIds':4,
     'limit':500,
     'offset': offset
 }
@@ -80,8 +80,10 @@ def send_email(template,title):
 
             i = 0
             for item in RECEIVER_EMAIL:
-
-              email = item['email']
+              if not item["emailBlacklisted"]:
+                  email = item['email']
+              else:
+                  continue
                 
               # Create the Email Message
               message = MIMEMultipart("alternative")

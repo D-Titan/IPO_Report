@@ -215,7 +215,7 @@ upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m
 upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 
 title2 = "No IPOs are live"
-
+subs=[]
 if not subs:
   title2 = "0 subscribers to send report"
   
@@ -288,9 +288,9 @@ for index,row in ipoTable.iterrows():
     info['Offer For Sale'] =  issue
 
   info['Lot Size'] = f"{row['Lot']} Shares"
-  info['Allotment Date*'] = row['BoA']
-  info['Refund Date*'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
-  info['Listing Date*'] = row['Listing']
+  info['Allotment Date'] = row['BoA']
+  info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
+  info['Listing Date'] = row['Listing']
 
   refund.append(info['Refund Date*'])
 
@@ -448,7 +448,7 @@ rawHTML = """
               {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
               <tr>
               <td class="key" style="color: #000000; padding: 4px 4px; font-size: 14px;">
-                {{r[0].replace("*",'')}}
+                {{r[0]}}
               </td>
               <td class="value" style="color: #000000; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
                 {{r[1]}}

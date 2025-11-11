@@ -439,7 +439,7 @@ rawHTML = """
             {{moreInfo[row[0]]['about']}}
             </td>
             <td style="padding-left: 15px;" valign="top" width="45%">
-            <div class="data-card" style="background-color: #eeeeee; border-radius: 8px; padding: 20px 20px 0px; border: 2px solid #cccccc;">
+            <div class="data-card" style="background-color: #eeeeee; border-radius: 8px; padding: 20px 20px 15px; border: 2px solid #cccccc;">
             <h3 style="margin-top:0; margin-bottom: 18px; color: #000000; font-size: 18px">
             Key Information
             </h3>
@@ -455,9 +455,6 @@ rawHTML = """
               </td>
               </tr>
               {% endfor %}
-                <tr>
-                    <td style="padding: 8px 4px;">&nbsp;</td>
-                </tr>
             </tbody>
           
             </table>

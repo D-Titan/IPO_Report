@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = [] #subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -215,7 +215,7 @@ upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m
 upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 
 title2 = "No IPOs are live"
-subs=[]
+
 if not subs:
   title2 = "0 subscribers to send report"
   
@@ -455,8 +455,8 @@ rawHTML = """
               </td>
               </tr>
               {% endfor %}
-              <div style="padding: 8px 4px"></div>
             </tbody>
+            <div style="padding: 8px 4px"></div>
             </table>
             </div>
             </td>

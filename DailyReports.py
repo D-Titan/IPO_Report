@@ -292,7 +292,7 @@ for index,row in ipoTable.iterrows():
   info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
   info['Listing Date'] = row['Listing']
 
-  refund.append(info['Refund Date*'])
+  refund.append(info['Refund Date'])
 
   infodf = pd.DataFrame(pd.Series(info))
   infodf.reset_index(level= None, inplace = True, drop = False)

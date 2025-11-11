@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = [] #subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -334,7 +334,7 @@ rawHTML = """
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>
-    Active IPO Report
+    Active Mainboard IPOs
     </title>
   </head>
   <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
@@ -559,7 +559,7 @@ rawHTML = """
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <div class="header" style="padding: 50px 20px 10px; text-align: center;">
         <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-        Upcoming IPOs
+        Upcoming Mainboard IPOs
         </h1>
         </div>
         <tr>
@@ -644,14 +644,14 @@ rawHTML = """
 
                     <!-- Navigation Links -->
                     <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-                        <a href="#Disclaimer" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
+                        <a href="https://drive.google.com/file/d/1jnoCaOhTFBV1Imu_NSIs_pM8pjAPRIDB/view?usp=sharing" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
                         <span style="padding: 0 25px; color: #cccccc;">|</span>
                         <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Unsubscribe</a>
                     </p>
 
                     <!-- Disclaimer Text -->
                     <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
-                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized. We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
                     </p>
 
                     <!-- Automated Note -->

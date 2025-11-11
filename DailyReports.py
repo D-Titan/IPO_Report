@@ -346,7 +346,7 @@ rawHTML = """
       <td align="center" style="padding: 0 10px;">
         <div class="header" style="padding: 50px 20px; text-align: center;">
         <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-        Active IPO Report
+        Active Mainboard IPOs
         </h1>
         <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
         As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.

@@ -218,7 +218,7 @@ availIPO = """
 		<meta charset="utf-8"/>
 		<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 		<title>
-		Active IPO Report
+		Active Mainboard IPOs
 		</title>
 	</head>
 	<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
@@ -230,7 +230,7 @@ availIPO = """
 			<td align="center" style="padding: 0 10px;">
 				<div class="header" style="padding: 50px 20px; text-align: center;">
 				<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-					Active IPO Report
+					Active Mainboard IPOs
 				</h1>
 				{% if activeIPO !=0 %}
 				<p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
@@ -313,7 +313,7 @@ availIPO = """
 				<table border="0" cellpadding="0" cellspacing="0" width="100%">
 				<div class="header" style="padding: 50px 20px 10px; text-align: center;">
 				<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-				Upcoming IPOs
+				Upcoming Mainboard IPOs
 				</h1>
 				</div>
 				<tr>
@@ -411,7 +411,7 @@ availIPO = """
 	
 	                    <!-- Disclaimer Text -->
 	                    <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
-	                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+	                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' sections are AI-summarized. We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
 	                    </p>
 	
 	                    <!-- Automated Note -->
@@ -439,7 +439,7 @@ noIPO = """
 	<head>
 		<meta charset="utf-8"/>
 		<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-		<title>IPO Status Report</title>
+		<title>Active Mainboard IPOs</title>
 	</head>
 	<body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
 		<table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -451,7 +451,7 @@ noIPO = """
 								<!-- Header Section -->
 								<div class="header" style="padding: 50px 20px; text-align: center;">
 									<h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-										IPO Report
+										Active Mainboard IPOs
 									</h1>
 									<p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
 										As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}
@@ -518,7 +518,7 @@ noIPO = """
 						
 						                    <!-- Disclaimer Text -->
 						                    <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
-						                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' section is AI-summarized (Gemini-2.5-flash-lite). We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+						                        <strong style="color: #000000;">Disclaimer:</strong> This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' sections are AI-summarized. We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
 						                    </p>
 						
 						                    <!-- Automated Note -->

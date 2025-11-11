@@ -452,8 +452,8 @@ rawHTML = """
                 {{r[1]}}
               </td>
               </tr>
-              <div style="padding: 8px 4px"></div>
               {% endfor %}
+              <div style="padding: 8px 4px"></div>
             </tbody>
             </table>
             </div>
@@ -510,7 +510,7 @@ rawHTML = """
             <thead>
             <tr style="background-color: #eeeeee">
               {% for col_name in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['columns'] %}
-              <th "="" style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
+              <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
               {{ col_name }}
               </th>
               {% endfor %}

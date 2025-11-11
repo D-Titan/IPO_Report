@@ -404,7 +404,7 @@ availIPO = """
 	
 	                    <!-- Navigation Links -->
 	                    <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-	                        <a href="#Disclaimer" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
+	                        <a href="https://drive.google.com/file/d/1jnoCaOhTFBV1Imu_NSIs_pM8pjAPRIDB/view?usp=sharing" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Disclaimer</a>
 	                        <span style="padding: 0 25px; color: #cccccc;">|</span>
 	                        <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">Unsubscribe</a>
 	                    </p>

@@ -72,7 +72,6 @@ def send_email(template,title):
         print(f"\nAn error occurred: {e}")
 
 
-
 if trigger_type.lower() == "demo":
   content = bs(cacheResponse.content, "html.parser")
   updateBtn = content.find('a', id = "updateBtn")
@@ -82,4 +81,4 @@ if trigger_type.lower() == "demo":
 else:
   content = cacheResponse.text
 
-send_email(content,"Thank you for Subscribing! Here is today's IPO Report." if trigger_type.lower() == 'subscribed' else "Here is your Demo IPO Report." )
+send_email(content,"Thank you for Subscribing! Here's your first IPO Report." if trigger_type.lower() == 'subscribed' else "Here is your Demo IPO Report." )

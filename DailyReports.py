@@ -455,8 +455,15 @@ rawHTML = """
               </td>
               </tr>
               {% endfor %}
+              <table style="border: 0;">
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px 4px;"></td>
+                    </tr>
+                </tbody>
+            </table>
             </tbody>
-            <div style="padding: 8px 4px"></div>
+          
             </table>
             </div>
             </td>

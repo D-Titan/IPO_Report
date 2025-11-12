@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = [] #subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -302,6 +302,11 @@ for index,row in ipoTable.iterrows():
     about = section.get_text() + about
       
   summary = summarize(about,apiKey)
+  summary = summary.strip()
+  summary = summary.strip("```html")
+  summary = summary.strip("```")
+  summary = summary.strip()
+  
 
   moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}
 

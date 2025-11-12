@@ -305,7 +305,7 @@ for index,row in ipoTable.iterrows():
   summary = summary.strip()
   summary = summary.strip("```html")
   summary = summary.strip("```")
-  summary = summary.strip()
+  
   
 
   moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}

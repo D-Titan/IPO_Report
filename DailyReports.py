@@ -566,11 +566,15 @@ rawHTML = """
         {% endif %}
 
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
-         <div class="header" style="padding: 50px 20px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-           Upcoming Mainboard IPOs
-          </h1>
-         </div>
+          <tr>
+            <td>
+            <div class="header" style="padding: 50px 20px 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+                Upcoming Mainboard IPOs
+              </h1>
+            </div>
+            </td>
+          </tr>
          <tr>
           <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
            {% if upcominglen != 0 %}

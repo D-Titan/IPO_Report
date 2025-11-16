@@ -76,7 +76,7 @@ if trigger_type.lower() == "demo":
   content = bs(cacheResponse.content, "html.parser")
   updateBtn = content.find('a', id = "updateBtn")
   updateBtn.string = "Subscribe to Request Updated Report"
-  updateBtn['href'] = "https://ipo-reports.pages.dev/#subscribe"
+  updateBtn['href'] = "https://ipo-reports.vercel.app/#subscribe"
   content = str(content)
 else:
   content = cacheResponse.text

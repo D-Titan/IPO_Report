@@ -186,8 +186,11 @@ for index,row in ipoTable.iterrows():
   link  = url + row['link']
   # Loading the ipo page
   pgsoup = bs(requests.get(link).content,'html.parser')
-  refund.append(datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y'))
-
+  try:
+	  refund.append(datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y'))
+  except:
+	  refund.append('-')
+   
 
 #preparing tables for template
 ipoTable['Refund'] = refund

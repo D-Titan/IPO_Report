@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = []
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -277,8 +277,11 @@ for index,row in ipoTable.iterrows():
 
   info = {}
   fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
-  issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
-
+  try:
+      issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
+  except:
+      issue = 0
+    
   info['PE'] = row['PE']
   info['Subscribed (RII)'] = row['RII'] if row['RII'] else '0.0'
 

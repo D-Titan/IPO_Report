@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = []
+RECEIVER_EMAIL = subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

@@ -296,7 +296,7 @@ for index,row in ipoTable.iterrows():
 
   info['Lot Size'] = f"{row['Lot']} Shares"
   info['Allotment Date'] = row['BoA']
-  info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
+  info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).get_text(strip=True).replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
   info['Listing Date'] = row['Listing']
 
   refund.append(info['Refund Date'])

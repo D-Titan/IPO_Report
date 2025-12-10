@@ -58,7 +58,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = []
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -162,13 +162,17 @@ else:
   fy = f'{date.year -1}-{str(date.year)[2:]}'
 
 #Fetching Data
+hds = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json",
+}
 ipo = reportApi.format(reportCode = 394, month = date.month, year = date.year, fy = fy)
 gmp = reportApi.format(reportCode = 331, month = date.month, year = date.year, fy = fy)
 sub = reportApi.format(reportCode = 333, month = date.month, year = date.year, fy = fy)
 
-Ipo = pd.DataFrame(json.loads(requests.get(ipo).content)['reportTableData'])
-Gmp = pd.DataFrame(json.loads(requests.get(gmp).content)['reportTableData'])
-Sub = pd.DataFrame(json.loads(requests.get(sub).content)['reportTableData'])
+Ipo = pd.DataFrame(json.loads(requests.get(ipo, headers = hds).content)['reportTableData'])
+Gmp = pd.DataFrame(json.loads(requests.get(gmp, headers = hds).content)['reportTableData'])
+Sub = pd.DataFrame(json.loads(requests.get(sub, headers = hds).content)['reportTableData'])
 
 #Selecting and Renaming columns
 ipoCols = ["IPO", "IPO Size",   "P/E",  "IPO Price",    "Lot",  "~id", "~Srt_Open", "~Srt_Close",   "~Srt_BoA_Dt",  "~Str_Listing", "~URLRewrite_Folder_Name"]

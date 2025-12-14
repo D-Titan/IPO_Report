@@ -212,7 +212,7 @@ ipoTable = ipoTable.merge(subTable[['RII','id']], on = 'id', how='left')
 ipoTable = ipoTable.sort_values(by=['Close','GMP'], ascending=[True, False])
 
 upcoming = upcoming.merge(gmpTable[['GMP','id']], on = 'id', how='left')
-upcoming = upcoming.fillna(0.0)
+upcoming['GMP'] = upcoming['GMP'].fillna(0.0)
 upcoming = upcoming.sort_values(by=['Close','GMP'], ascending=[True, False])
 upcoming['Open'] = upcoming['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
 upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))

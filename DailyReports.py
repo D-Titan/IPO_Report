@@ -24,6 +24,10 @@ urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
 brevoapi = json.loads(os.environ.get('BREVO_API'))['api_key']
 cache = json.loads(os.environ.get('cache'))
+cj = json.loads(os.environ.get('cj'))
+
+cj_endpoint = cj['cj_endpoint']
+cj_api = cj['cj_api']
 
 cacheAPI = cache['cacheAPI']
 cacheURL = cache['cacheURL']
@@ -58,7 +62,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = []
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -150,6 +154,37 @@ def summarize(content,api_key):
   response = client.models.generate_content(model = model, config = config, contents = contents)
   return response.text
 
+def toggle_cj(is_enabled=True):
+    """
+    Sets the job status to Enabled (True) or Disabled (False).
+    """
+    headers = {
+        'Authorization': f'Bearer {cj_api}',
+        'Content-Type': 'application/json'
+    }
+    
+    # Only include the field you want to update
+    payload = {
+        'job': {
+            'enabled': is_enabled
+        }
+    }
+    
+    try:
+        # Use requests.patch for partial updates
+        response = requests.patch(cj_endpoint, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()
+        
+        status = "ENABLED" if is_enabled else "DISABLED"
+        print(f"Success! scheduled run is {status}")
+        return response.json()
+        
+    except requests.exceptions.HTTPError as err:
+        print(f"HTTP error occurred: {err}")
+        print(f"Response: {response.text}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 today = datetime.now()
 time = (today + timedelta(hours = 5, minutes = 30)).time()
@@ -166,167 +201,173 @@ hds = {
     "User-Agent": "Mozilla/5.0",
     "Accept": "application/json",
 }
+
 ipo = reportApi.format(reportCode = 394, month = date.month, year = date.year, fy = fy)
 gmp = reportApi.format(reportCode = 331, month = date.month, year = date.year, fy = fy)
 sub = reportApi.format(reportCode = 333, month = date.month, year = date.year, fy = fy)
 
-Ipo = pd.DataFrame(json.loads(requests.get(ipo, headers = hds).content)['reportTableData'])
-Gmp = pd.DataFrame(json.loads(requests.get(gmp, headers = hds).content)['reportTableData'])
-Sub = pd.DataFrame(json.loads(requests.get(sub, headers = hds).content)['reportTableData'])
-
-#Selecting and Renaming columns
-ipoCols = ["IPO", "IPO Size",   "P/E",  "IPO Price",    "Lot",  "~id", "~Srt_Open", "~Srt_Close",   "~Srt_BoA_Dt",  "~Str_Listing", "~URLRewrite_Folder_Name"]
-gmpCols = ["Sub",   "~id",  "Updated-On",   "~urlrewrite_folder_name",  "~gmp_percent_calc"]
-subCols = ["Total", "QIB",  "SHNI", "BHNI", "NII",  "RII",  "~id",  "~URLRewrite_Folder_Name"]
-
-ipoColsRenamed = {"IPO":"Issuer Company","IPO Size": "IPO Size","P/E":'PE',"~id": 'id', "~Srt_Open": "Open", "~Srt_Close": "Close", "~Srt_BoA_Dt": "BoA", "~Str_Listing": "Listing",  "~URLRewrite_Folder_Name": "link"}
-gmpColsRenamed = {"~id": 'id', "~urlrewrite_folder_name":"gmplink", "~gmp_percent_calc":"GMP"}
-subColsRenamed = {"~id": 'id',  "~URLRewrite_Folder_Name": "sublink"}
-
-ipoTable = Ipo[ipoCols].rename(columns = ipoColsRenamed)
-subTable = Sub[subCols].rename(columns = subColsRenamed)
-gmpTable = Gmp[gmpCols].rename(columns = gmpColsRenamed)
-
-#Cleaning and converting table values
-ipoTable['IPO Size'] = ipoTable['IPO Size'].apply(lambda x: x.replace('&#8377;','').replace(' Cr','').replace(' Shares',''))
-ipoTable["Issuer Company"] = ipoTable["Issuer Company"].str.replace(' IPO','')
-ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-
-gmpTable['GMP'] = gmpTable['GMP'].apply(lambda x: float(str(x if x != '' else '0')))
-subTable['Total'] = subTable['Total'].apply(lambda x: bs(x,'html.parser').find('b').get_text())
-subTable['RII'] = subTable['RII'].fillna(0.0)
-subTable['Subscribed'] = subTable['Total'] + subTable['RII'].apply(lambda x: f' (RII: {x})')
-
-
-#Filtering tables to keep Active and Upcoming IPOs
-upcoming = ipoTable[ipoTable['Open'] > date]
-ipoTable = ipoTable[(ipoTable['Open'] <= date) & (ipoTable['Close'] >= date)] #Most Imp change from 'and' to using '&'
-
-# Merging and sorting
-ipoTable = ipoTable.merge(gmpTable[['GMP','id']], on = 'id', how='left')
-ipoTable = ipoTable.merge(subTable[['Subscribed','id']], on = 'id', how='left')
-ipoTable = ipoTable.merge(subTable[['RII','id']], on = 'id', how='left')
-ipoTable = ipoTable.sort_values(by=['Close','GMP'], ascending=[True, False])
-
-upcoming = upcoming.merge(gmpTable[['GMP','id']], on = 'id', how='left')
-upcoming['GMP'] = upcoming['GMP'].fillna(0.0)
-upcoming = upcoming.sort_values(by=['Close','GMP'], ascending=[True, False])
-upcoming['Open'] = upcoming['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-
-title2 = "No IPOs are live"
-
-if not subs:
-  title2 = "0 subscribers to send report"
-  
-
-# Preparing subject for email
-closing = len(ipoTable[ipoTable['Close'] == date])
-starting = len(ipoTable[ipoTable['Open'] == date])
-totalIpo = len(ipoTable)
-
-title = ''
-
-title_parts = []
-
-if closing:
-    title_parts.append(f"{closing} IPO{'s' if closing > 1 else ''} closing")
-if starting:
-    title_parts.append(f"{starting} IPO{'s' if starting > 1 else ''} starting")
-
-if title_parts:
-    title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
-else:
-    title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
-
-
-# Converting dates back to string for better representation
-ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-ipoTable['RII'] = ipoTable['RII'].fillna(0.0)
-
-# Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
-moreInfo = {}
-refund = []
-
-for index,row in ipoTable.iterrows():
-  company = row['Issuer Company']
-  link  = url + row['link']
-
-  # Loading the ipo page
-  pgsoup = bs(requests.get(link).content,'html.parser')
-
-  # Extracting information
-  financials = pgsoup.find('table', id = 'financialTable')
-  objectives = pgsoup.find('table', id = 'ObjectiveIssue')
-
-  if financials:
-      finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
-      finTable = finTable.fillna('')
-      finTable = finTable.iloc[:-1]
-  else:
-      finTable = pd.DataFrame()
-
-  if objectives:
-      objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-      objTable = objTable.fillna('')
-  else:
-      objTable = pd.DataFrame() 
-
-  info = {}
-  fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
-  try:
-      issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
-  except:
-      issue = 0
+try: 
+    Ipo = pd.DataFrame(json.loads(requests.get(ipo, headers = hds).content)['reportTableData'])
+    Gmp = pd.DataFrame(json.loads(requests.get(gmp, headers = hds).content)['reportTableData'])
+    Sub = pd.DataFrame(json.loads(requests.get(sub, headers = hds).content)['reportTableData'])
     
-  info['PE'] = row['PE']
-  info['Subscribed (RII)'] = row['RII'] if row['RII'] else '0.0'
-
-  if fresh:
-    info['Fresh Issue Size'] = fresh.get_text()
-  else:
-    info['Offer For Sale'] =  issue
-
-  info['Lot Size'] = f"{row['Lot']} Shares"
-  info['Allotment Date'] = row['BoA']
-  info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).get_text(strip=True).replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
-  info['Listing Date'] = row['Listing']
-
-  refund.append(info['Refund Date'])
-
-  infodf = pd.DataFrame(pd.Series(info))
-  infodf.reset_index(level= None, inplace = True, drop = False)
-
-  about = """ """
-  for section in pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings:
-    about = section.get_text() + about
+    #Selecting and Renaming columns
+    ipoCols = ["IPO", "IPO Size",   "P/E",  "IPO Price",    "Lot",  "~id", "~Srt_Open", "~Srt_Close",   "~Srt_BoA_Dt",  "~Str_Listing", "~URLRewrite_Folder_Name"]
+    gmpCols = ["Sub",   "~id",  "Updated-On",   "~urlrewrite_folder_name",  "~gmp_percent_calc"]
+    subCols = ["Total", "QIB",  "SHNI", "BHNI", "NII",  "RII",  "~id",  "~URLRewrite_Folder_Name"]
+    
+    ipoColsRenamed = {"IPO":"Issuer Company","IPO Size": "IPO Size","P/E":'PE',"~id": 'id', "~Srt_Open": "Open", "~Srt_Close": "Close", "~Srt_BoA_Dt": "BoA", "~Str_Listing": "Listing",  "~URLRewrite_Folder_Name": "link"}
+    gmpColsRenamed = {"~id": 'id', "~urlrewrite_folder_name":"gmplink", "~gmp_percent_calc":"GMP"}
+    subColsRenamed = {"~id": 'id',  "~URLRewrite_Folder_Name": "sublink"}
+    
+    ipoTable = Ipo[ipoCols].rename(columns = ipoColsRenamed)
+    subTable = Sub[subCols].rename(columns = subColsRenamed)
+    gmpTable = Gmp[gmpCols].rename(columns = gmpColsRenamed)
+    
+    #Cleaning and converting table values
+    ipoTable['IPO Size'] = ipoTable['IPO Size'].apply(lambda x: x.replace('&#8377;','').replace(' Cr','').replace(' Shares',''))
+    ipoTable["Issuer Company"] = ipoTable["Issuer Company"].str.replace(' IPO','')
+    ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
+    ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
+    ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
+    ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
+    
+    gmpTable['GMP'] = gmpTable['GMP'].apply(lambda x: float(str(x if x != '' else '0')))
+    subTable['Total'] = subTable['Total'].apply(lambda x: bs(x,'html.parser').find('b').get_text())
+    subTable['RII'] = subTable['RII'].fillna(0.0)
+    subTable['Subscribed'] = subTable['Total'] + subTable['RII'].apply(lambda x: f' (RII: {x})')
+    
+    
+    #Filtering tables to keep Active and Upcoming IPOs
+    upcoming = ipoTable[ipoTable['Open'] > date]
+    ipoTable = ipoTable[(ipoTable['Open'] <= date) & (ipoTable['Close'] >= date)] #Most Imp change from 'and' to using '&'
+    
+    # Merging and sorting
+    ipoTable = ipoTable.merge(gmpTable[['GMP','id']], on = 'id', how='left')
+    ipoTable = ipoTable.merge(subTable[['Subscribed','id']], on = 'id', how='left')
+    ipoTable = ipoTable.merge(subTable[['RII','id']], on = 'id', how='left')
+    ipoTable = ipoTable.sort_values(by=['Close','GMP'], ascending=[True, False])
+    
+    upcoming = upcoming.merge(gmpTable[['GMP','id']], on = 'id', how='left')
+    upcoming['GMP'] = upcoming['GMP'].fillna(0.0)
+    upcoming = upcoming.sort_values(by=['Close','GMP'], ascending=[True, False])
+    upcoming['Open'] = upcoming['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    
+    title2 = "No IPOs are live"
+    
+    if not subs:
+      title2 = "0 subscribers to send report"
       
-  summary = summarize(about,apiKey)
-  summary = summary.strip()
-  summary = summary.strip("```html")
-  summary = summary.strip("```")
-  
-  
-
-  moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}
-
-# Preparing table for template
-ipoTable['Refund'] = refund
-ipoTable = ipoTable.drop(columns=['link', 'Listing', 'id', 'PE','Lot','RII','BoA'])
-ipoTable = ipoTable[['Issuer Company', 'Open', 'Close', 'Refund', 'IPO Size', 'IPO Price', 'GMP','Subscribed']]
-ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna('0.0')
-ipoTable = ipoTable.to_dict(orient='split')
-
-upcoming = upcoming.drop(columns=['link', 'Listing', 'id','Lot'])
-upcoming = upcoming[['Issuer Company', 'Open', 'Close', 'BoA', 'IPO Size', 'IPO Price', 'GMP','PE']]
-upcomingtable = upcoming.to_dict(orient='split')
+    
+    # Preparing subject for email
+    closing = len(ipoTable[ipoTable['Close'] == date])
+    starting = len(ipoTable[ipoTable['Open'] == date])
+    totalIpo = len(ipoTable)
+    
+    title = ''
+    
+    title_parts = []
+    
+    if closing:
+        title_parts.append(f"{closing} IPO{'s' if closing > 1 else ''} closing")
+    if starting:
+        title_parts.append(f"{starting} IPO{'s' if starting > 1 else ''} starting")
+    
+    if title_parts:
+        title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
+    else:
+        title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
+    
+    
+    # Converting dates back to string for better representation
+    ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    ipoTable['RII'] = ipoTable['RII'].fillna(0.0)
+    
+    # Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
+    moreInfo = {}
+    refund = []
+    
+    for index,row in ipoTable.iterrows():
+      company = row['Issuer Company']
+      link  = url + row['link']
+    
+      # Loading the ipo page
+      pgsoup = bs(requests.get(link).content,'html.parser')
+    
+      # Extracting information
+      financials = pgsoup.find('table', id = 'financialTable')
+      objectives = pgsoup.find('table', id = 'ObjectiveIssue')
+    
+      if financials:
+          finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
+          finTable = finTable.fillna('')
+          finTable = finTable.iloc[:-1]
+      else:
+          finTable = pd.DataFrame()
+    
+      if objectives:
+          objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
+          objTable = objTable.fillna('')
+      else:
+          objTable = pd.DataFrame() 
+    
+      info = {}
+      fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
+      try:
+          issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
+      except:
+          issue = 0
+        
+      info['PE'] = row['PE']
+      info['Subscribed (RII)'] = row['RII'] if row['RII'] else '0.0'
+    
+      if fresh:
+        info['Fresh Issue Size'] = fresh.get_text()
+      else:
+        info['Offer For Sale'] =  issue
+    
+      info['Lot Size'] = f"{row['Lot']} Shares"
+      info['Allotment Date'] = row['BoA']
+      info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).get_text(strip=True).replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
+      info['Listing Date'] = row['Listing']
+    
+      refund.append(info['Refund Date'])
+    
+      infodf = pd.DataFrame(pd.Series(info))
+      infodf.reset_index(level= None, inplace = True, drop = False)
+    
+      about = """ """
+      for section in pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings:
+        about = section.get_text() + about
+          
+      summary = summarize(about,apiKey)
+      summary = summary.strip()
+      summary = summary.strip("```html")
+      summary = summary.strip("```")
+      
+      
+    
+      moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}
+    
+    # Preparing table for template
+    ipoTable['Refund'] = refund
+    ipoTable = ipoTable.drop(columns=['link', 'Listing', 'id', 'PE','Lot','RII','BoA'])
+    ipoTable = ipoTable[['Issuer Company', 'Open', 'Close', 'Refund', 'IPO Size', 'IPO Price', 'GMP','Subscribed']]
+    ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna('0.0')
+    ipoTable = ipoTable.to_dict(orient='split')
+    
+    upcoming = upcoming.drop(columns=['link', 'Listing', 'id','Lot'])
+    upcoming = upcoming[['Issuer Company', 'Open', 'Close', 'BoA', 'IPO Size', 'IPO Price', 'GMP','PE']]
+    upcomingtable = upcoming.to_dict(orient='split')
+    toggle_cj(is_enabled=False)
+    
+except:
+    toggle_cj(is_enabled=True)
 
 """
 Variables used in template:

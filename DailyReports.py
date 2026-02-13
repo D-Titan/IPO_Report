@@ -59,8 +59,6 @@ while count == 500 :
   count = response["count"]
   offset += 500
 
-subs = []
-
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
@@ -192,7 +190,7 @@ today = datetime.now()
 time = (today + timedelta(hours = 5, minutes = 30)).time()
 date = today.date()
 
-date = datetime.strptime('2026-2-12', '%Y-%m-%d').date()
+
 
 fy = ''
 if date > datetime.strptime(f'31-03-{date.year}', '%d-%m-%Y').date() :
@@ -374,8 +372,6 @@ try:
 except:
     toggle_cj(is_enabled=True)
 
-print(len(upcoming))
-toggle_cj(is_enabled=False)
 
 """
 Variables used in template:

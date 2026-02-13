@@ -192,7 +192,7 @@ today = datetime.now()
 time = (today + timedelta(hours = 5, minutes = 30)).time()
 date = today.date()
 
-date = datetime.strptime('2024-2-12', '%Y-%m-%d').date()
+date = datetime.strptime('2026-2-12', '%Y-%m-%d').date()
 
 fy = ''
 if date > datetime.strptime(f'31-03-{date.year}', '%d-%m-%Y').date() :

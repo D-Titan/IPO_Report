@@ -59,6 +59,8 @@ while count == 500 :
   count = response["count"]
   offset += 500
 
+subs = []
+
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']

@@ -192,6 +192,8 @@ today = datetime.now()
 time = (today + timedelta(hours = 5, minutes = 30)).time()
 date = today.date()
 
+date = datetime.strptime('2024-2-12', '%Y-%m-%d').date()
+
 fy = ''
 if date > datetime.strptime(f'31-03-{date.year}', '%d-%m-%Y').date() :
   fy = f'{date.year}-{str(date.year+1)[2:]}'
@@ -361,6 +363,7 @@ try:
     ipoTable = ipoTable.drop(columns=['link', 'Listing', 'id', 'PE','Lot','RII','BoA'])
     ipoTable = ipoTable[['Issuer Company', 'Open', 'Close', 'Refund', 'IPO Size', 'IPO Price', 'GMP','Subscribed']]
     ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna('0.0')
+    print(len(ipoTable))
     ipoTable = ipoTable.to_dict(orient='split')
     
     upcoming = upcoming.drop(columns=['link', 'Listing', 'id','Lot'])
@@ -370,6 +373,9 @@ try:
     
 except:
     toggle_cj(is_enabled=True)
+
+print(len(upcoming))
+toggle_cj(is_enabled=False)
 
 """
 Variables used in template:

@@ -369,7 +369,8 @@ try:
     upcomingtable = upcoming.to_dict(orient='split')
     toggle_cj(is_enabled=False)
     
-except:
+except Exception as e:
+    print("Error: ", e)
     toggle_cj(is_enabled=True)
 
 

@@ -19,6 +19,7 @@ from jinja2 import Template
 
 
 # Fetching variables from environment
+test = json.loads(os.environ.get('TEST_USER'))
 sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
@@ -62,7 +63,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
+RECEIVER_EMAIL = test['emails']
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

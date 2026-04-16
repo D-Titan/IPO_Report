@@ -14,7 +14,13 @@ jobs:
     steps:
      - name: Checkout repository
        uses: actions/checkout@v4
- 
+
+     - name: Mask Inputs
+       env:
+         EMAIL: ${{ inputs.email }}
+       run: |
+         echo "::add-mask::$EMAIL"
+
      - name: Set up Python
        uses: actions/setup-python@v5
        with:

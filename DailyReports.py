@@ -19,7 +19,7 @@ from jinja2 import Template
 
 
 # Fetching variables from environment
-test = json.loads(os.environ.get('TEST_USER'))
+# test = json.loads(os.environ.get('TEST_USER'))
 sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
@@ -63,7 +63,7 @@ while count == 500 :
 # Setup mailing details
 SENDER_EMAIL = sender['email']
 SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = [test['emails']]
+RECEIVER_EMAIL = subs
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -126,7 +126,7 @@ def summarize(content,api_key):
     3.  CORE FOCUS: The summary must exclusively extract and present (only available ones from) two key pieces of information:
         - What the company does: Its core services, products, or mission.
         - Who its customers are: Its primary consumers, clients, or target market.
-        Keep phrasing neutral and factual (no marketing language, no adjectives like “best”, “leading”, or subjective claims). Only present those sections about which the description specifies, otherwise avoid generating that section.
+        No property details. Keep phrasing neutral and factual (no marketing language, no adjectives like “best”, “leading”, or subjective claims). Only present those sections about which the description specifies, otherwise avoid generating that section.
     4.  CONCISE: Keep the text simple and to the point. Avoid jargon and extraneous details.  The entire <div> must be no more than 80 words total.
     5.  STRUCTURE: Use '<p>' tags to separate sections and '<b>' or '<strong>' tags to create bolded titles for each section(e.g., "Core Services:", "Primary Customers:") and '<ol>' for displaying list.
 

@@ -300,7 +300,11 @@ try:
     
       # Loading the ipo page
       pgsoup = bs(requests.get(link).content,'html.parser')
-    
+
+      rfnd = pgsoup.find('ul', class_=["top-ratios", "company-ratios"]).find('strong', string=lambda t: t and 'Refunds Initiation' in t).find_parent('li')
+      refund_parts = list(rfnd.stripped_strings)
+      refund_date = refund_parts[1]
+      
       # Extracting information
       financials = pgsoup.find('table', id = 'financialTable')
       objectives = pgsoup.find('table', id = 'ObjectiveIssue')
@@ -332,10 +336,10 @@ try:
         info['Fresh Issue Size'] = fresh.get_text()
       else:
         info['Offer For Sale'] =  issue
-    
+        
       info['Lot Size'] = f"{row['Lot']} Shares"
       info['Allotment Date'] = row['BoA']
-      info['Refund Date'] = datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).get_text(strip=True).replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
+      info['Refund Date'] = datetime.strftime(datetime.strptime(refund_date.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
       info['Listing Date'] = row['Listing']
     
       refund.append(info['Refund Date'])
@@ -343,9 +347,7 @@ try:
       infodf = pd.DataFrame(pd.Series(info))
       infodf.reset_index(level= None, inplace = True, drop = False)
     
-      about = """ """
-      for section in pgsoup.find('a',attrs={'title':(company + ' Website')}).find_parent('table').parent.previous_siblings:
-        about = section.get_text() + about
+      about = pgsoup.find('div', attrs = {'aria-labelledby': 'about-tab'}).get_text()
           
       summary = summarize(about,apiKey)
       summary = summary.strip()

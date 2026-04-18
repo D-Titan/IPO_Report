@@ -289,7 +289,7 @@ try:
     # Preparing subject for email
     closing = len(ipoTable[ipoTable['Close'] == date]); starting = len(ipoTable[ipoTable['Open'] == date]); totalIpo = len(ipoTable)
     title = gen_title(closing = closing, starting = starting, totalIpo = totalIpo)
-    flag  = not ipoTable[ipoTable["Open"] == date | ipoTable["Close"] == date].empty
+    flag  = not ipoTable[(ipoTable["Open"] == date) | (ipoTable["Close"] == date)].empty
 
     title2 = "0 subscribers to send report" if not subs else "No IPOs are live" if flag else "No new Activity"
 
@@ -395,7 +395,7 @@ try:
     
 except Exception as e:
     traceback.print_exc()
-    print("ERROR: " + e)
+    print(f"ERROR: {e}")
     toggle_cj(is_enabled=True)
 
 

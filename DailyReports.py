@@ -70,7 +70,7 @@ def send_email(template,title):
     # Setup mailing details
     SENDER_EMAIL = sender['email']
     SENDER_PASSWORD = sender['pass']
-    RECEIVER_EMAIL = subs
+    RECEIVER_EMAIL = [test]
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
 
@@ -195,7 +195,7 @@ def toggle_cj(is_enabled=True):
 
 
 # Fetching variables from environment
-# test = json.loads(os.environ.get('TEST_USER'))
+test = json.loads(os.environ.get('TEST_USER'))
 sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']

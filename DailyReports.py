@@ -772,7 +772,7 @@ finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreI
 
 #Caching this report 
 cacheResponse = requests.put(cacheURL, headers = { "Authorization": f"Bearer {cacheAPI}", "Content-Type": "text/plain" }, data = finalHTML)
-print("Cache Status:" + cacheResponse.status_code)
+print(f"Cache Status: {cacheResponse.status_code}")
 
 # Finally sending emails
 if flag:

@@ -195,7 +195,7 @@ def toggle_cj(is_enabled=True):
 
 
 # Fetching variables from environment
-test = json.loads(os.environ.get('TEST_USER'))
+test = json.loads(os.environ.get('TEST_USER')); test = test['email']
 sender = json.loads(os.environ.get('SENDER'))
 urls = json.loads(os.environ.get('URLS'))
 apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']

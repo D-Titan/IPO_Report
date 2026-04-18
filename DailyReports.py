@@ -244,6 +244,8 @@ try:
     #Filtering tables to keep Active and Upcoming IPOs
     upcoming = ipoTable[ipoTable['Open'] > date]
     ipoTable = ipoTable[(ipoTable['Open'] <= date) & (ipoTable['Close'] >= date)] #Most Imp change from 'and' to using '&'
+
+    ipoTable = ipoTable[ipoTable["IPO Price"] != ""]
     
     # Merging and sorting
     ipoTable = ipoTable.merge(gmpTable[['GMP','id']], on = 'id', how='left')

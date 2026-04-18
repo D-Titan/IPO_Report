@@ -18,56 +18,61 @@ from io import StringIO
 from jinja2 import Template
 
 
-# Fetching variables from environment
-# test = json.loads(os.environ.get('TEST_USER'))
-sender = json.loads(os.environ.get('SENDER'))
-urls = json.loads(os.environ.get('URLS'))
-apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
-brevoapi = json.loads(os.environ.get('BREVO_API'))['api_key']
-cache = json.loads(os.environ.get('cache'))
-cj = json.loads(os.environ.get('cj'))
+def fetch(link : str, headers : dict = { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }, params : dict = {}) :
+    return requests.get(link, headers = headers).content
 
-cj_endpoint = cj['cj_endpoint']
-cj_api = cj['cj_api']
 
-cacheAPI = cache['cacheAPI']
-cacheURL = cache['cacheURL']
+def getSubs() :
+    brevo = "https://api.brevo.com/v3/contacts"
 
-url = urls['domain']
-reportApi = urls['reportApi']
-updateurl = urls['updateurl'] 
+    offset = 0
+    count = 500
+    subs = []
+    while count == 500 :
+        res = fetch(brevo, headers = {'api-key':brevoapi, 'accept':'application/json'}, params = {'listIds':4, 'limit':500, 'offset': offset})
+        response = json.loads(res)
+        subs += response.get('contacts', [])
+        count = response["count"]
+        offset += 500
+    
+    return subs
 
-brevo = "https://api.brevo.com/v3/contacts"
 
-headers = {
-    'api-key':brevoapi,
-    'accept':'application/json'
-}
+def chng_date_form(df, cols, to = 'str'):
+    for col in cols:
+        if to != 'str':
+            df[col]  = df[col].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
+        else:
+            df[col] = df[col].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+    
+    return df
 
-offset = 0
-count = 500
-params = {
-    'listIds':4,
-    'limit':500,
-    'offset': offset
-}
 
-subs = []
-while count == 500 :
-  res = requests.get(brevo,headers = headers, params = params).content
-  response = json.loads(res)
-  subs += response.get('contacts', [])
-  count = response["count"]
-  offset += 500
+def gen_title(closing, starting, totalIpo):
+    title = ''
+    
+    title_parts = []
+    
+    if closing:
+        title_parts.append(f"{closing} IPO{'s' if closing > 1 else ''} closing")
+    if starting:
+        title_parts.append(f"{starting} IPO{'s' if starting > 1 else ''} starting")
+    
+    if title_parts:
+        title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
+    else:
+        title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
+    
+    return title
 
-# Setup mailing details
-SENDER_EMAIL = sender['email']
-SENDER_PASSWORD = sender['pass']
-RECEIVER_EMAIL = subs
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 465
 
 def send_email(template,title):
+    # Setup mailing details
+    SENDER_EMAIL = sender['email']
+    SENDER_PASSWORD = sender['pass']
+    RECEIVER_EMAIL = subs
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 465
 
     # Create a secure SSL context
     context = ssl.create_default_context()
@@ -155,6 +160,7 @@ def summarize(content,api_key):
   response = client.models.generate_content(model = model, config = config, contents = contents)
   return response.text
 
+
 def toggle_cj(is_enabled=True):
     """
     Sets the job status to Enabled (True) or Disabled (False).
@@ -187,11 +193,44 @@ def toggle_cj(is_enabled=True):
         print(f"An error occurred: {e}")
 
 
+
+# Fetching variables from environment
+# test = json.loads(os.environ.get('TEST_USER'))
+sender = json.loads(os.environ.get('SENDER'))
+urls = json.loads(os.environ.get('URLS'))
+apiKey = json.loads(os.environ.get('GEMINI_API_KEY'))['api_key']
+brevoapi = json.loads(os.environ.get('BREVO_API'))['api_key']
+cache = json.loads(os.environ.get('cache'))
+cj = json.loads(os.environ.get('cj'))
+
+cj_endpoint = cj['cj_endpoint']
+cj_api = cj['cj_api']
+
+cacheAPI = cache['cacheAPI']
+cacheURL = cache['cacheURL']
+
+url = urls['domain']
+reportApi = urls['reportApi']
+updateurl = urls['updateurl'] 
+
+subs = getSubs()
+
+Cols = {
+    'ipoCols' : ["IPO", "IPO Size",   "P/E",  "IPO Price",    "Lot",  "~id", "~Srt_Open", "~Srt_Close",   "~Srt_BoA_Dt",  "~Str_Listing", "~URLRewrite_Folder_Name"],
+    'gmpCols' : ["Sub",   "~id",  "Updated-On",   "~urlrewrite_folder_name",  "~gmp_percent_calc"],
+    'subCols' : ["Total", "QIB",  "SHNI", "BHNI", "NII",  "RII",  "~id",  "~URLRewrite_Folder_Name"]
+}
+
+ColsRenamed = {
+    'ipoColsRenamed' : {"IPO":"Issuer Company","IPO Size": "IPO Size","P/E":'PE',"~id": 'id', "~Srt_Open": "Open", "~Srt_Close": "Close", "~Srt_BoA_Dt": "BoA", "~Str_Listing": "Listing",  "~URLRewrite_Folder_Name": "link"},
+    'gmpColsRenamed' : {"~id": 'id', "~urlrewrite_folder_name":"gmplink", "~gmp_percent_calc":"GMP"},
+    'subColsRenamed' : {"~id": 'id',  "~URLRewrite_Folder_Name": "sublink"}
+}
+
+
 today = datetime.now()
 time = (today + timedelta(hours = 5, minutes = 30)).time()
 date = today.date()
-
-
 
 fy = ''
 if date > datetime.strptime(f'31-03-{date.year}', '%d-%m-%Y').date() :
@@ -199,42 +238,27 @@ if date > datetime.strptime(f'31-03-{date.year}', '%d-%m-%Y').date() :
 else:
   fy = f'{date.year -1}-{str(date.year)[2:]}'
 
-#Fetching Data
-hds = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json",
-}
 
 ipo = reportApi.format(reportCode = 394, month = date.month, year = date.year, fy = fy)
 gmp = reportApi.format(reportCode = 331, month = date.month, year = date.year, fy = fy)
 sub = reportApi.format(reportCode = 333, month = date.month, year = date.year, fy = fy)
 
 try: 
-    Ipo = pd.DataFrame(json.loads(requests.get(ipo, headers = hds).content)['reportTableData'])
-    Gmp = pd.DataFrame(json.loads(requests.get(gmp, headers = hds).content)['reportTableData'])
-    Sub = pd.DataFrame(json.loads(requests.get(sub, headers = hds).content)['reportTableData'])
+    Ipo = pd.DataFrame(json.loads(fetch(ipo))['reportTableData'])
+    Gmp = pd.DataFrame(json.loads(fetch(gmp))['reportTableData'])
+    Sub = pd.DataFrame(json.loads(fetch(sub))['reportTableData'])
     
     #Selecting and Renaming columns
-    ipoCols = ["IPO", "IPO Size",   "P/E",  "IPO Price",    "Lot",  "~id", "~Srt_Open", "~Srt_Close",   "~Srt_BoA_Dt",  "~Str_Listing", "~URLRewrite_Folder_Name"]
-    gmpCols = ["Sub",   "~id",  "Updated-On",   "~urlrewrite_folder_name",  "~gmp_percent_calc"]
-    subCols = ["Total", "QIB",  "SHNI", "BHNI", "NII",  "RII",  "~id",  "~URLRewrite_Folder_Name"]
-    
-    ipoColsRenamed = {"IPO":"Issuer Company","IPO Size": "IPO Size","P/E":'PE',"~id": 'id', "~Srt_Open": "Open", "~Srt_Close": "Close", "~Srt_BoA_Dt": "BoA", "~Str_Listing": "Listing",  "~URLRewrite_Folder_Name": "link"}
-    gmpColsRenamed = {"~id": 'id', "~urlrewrite_folder_name":"gmplink", "~gmp_percent_calc":"GMP"}
-    subColsRenamed = {"~id": 'id',  "~URLRewrite_Folder_Name": "sublink"}
-    
-    ipoTable = Ipo[ipoCols].rename(columns = ipoColsRenamed)
-    subTable = Sub[subCols].rename(columns = subColsRenamed)
-    gmpTable = Gmp[gmpCols].rename(columns = gmpColsRenamed)
+    ipoTable = Ipo[Cols["ipoCols"]].rename(columns = ColsRenamed['ipoColsRenamed'])
+    subTable = Sub[Cols['subCols']].rename(columns = ColsRenamed['subColsRenamed'])
+    gmpTable = Gmp[Cols['gmpCols']].rename(columns = ColsRenamed['gmpColsRenamed'])
     
     #Cleaning and converting table values
     ipoTable['IPO Size'] = ipoTable['IPO Size'].apply(lambda x: x.replace('&#8377;','').replace(' Cr','').replace(' Shares',''))
     ipoTable["Issuer Company"] = ipoTable["Issuer Company"].str.replace(' IPO','')
-    ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-    ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-    ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-    ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d").date())
-    
+
+    ipoTable = chng_date_form(ipoTable, ["Open", "Close", "BoA", "Listing"], to = 'dtime') #Convert Dates to DateTime Objects
+
     gmpTable['GMP'] = gmpTable['GMP'].apply(lambda x: float(str(x if x != '' else '0')))
     subTable['Total'] = subTable['Total'].apply(lambda x: bs(x,'html.parser').find('b').get_text())
     subTable['RII'] = subTable['RII'].fillna(0.0)
@@ -256,53 +280,31 @@ try:
     upcoming = upcoming.merge(gmpTable[['GMP','id']], on = 'id', how='left')
     upcoming['GMP'] = upcoming['GMP'].fillna(0.0)
     upcoming = upcoming.sort_values(by=['Close','GMP'], ascending=[True, False])
-    upcoming['Open'] = upcoming['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-    upcoming['Close'] = upcoming['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-    upcoming['BoA'] = upcoming['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
+
+    upcoming = chng_date_form(upcoming, ["Open", "Close", "BoA"], to = 'str') #Convert Dates to String
     
-    title2 = "No IPOs are live"
-    
-    if not subs:
-      title2 = "0 subscribers to send report"
-      
-    
+   
     # Preparing subject for email
-    closing = len(ipoTable[ipoTable['Close'] == date])
-    starting = len(ipoTable[ipoTable['Open'] == date])
-    totalIpo = len(ipoTable)
+    closing = len(ipoTable[ipoTable['Close'] == date]); starting = len(ipoTable[ipoTable['Open'] == date]); totalIpo = len(ipoTable)
+    title = gen_title(closing = closing, starting = starting, totalIpo = totalIpo)
+    flag  = not ipoTable[ipoTable["Open"] == date | ipoTable["Close"] == date].empty
+
+    title2 = "0 subscribers to send report" if not subs else "No IPOs are live" if flag else "No new Activity"
+
+    ipoTable = chng_date_form(ipoTable, ["Open", "Close", "BoA", "Listing"], to = 'str') #Convert Dates to String
     
-    title = ''
-    
-    title_parts = []
-    
-    if closing:
-        title_parts.append(f"{closing} IPO{'s' if closing > 1 else ''} closing")
-    if starting:
-        title_parts.append(f"{starting} IPO{'s' if starting > 1 else ''} starting")
-    
-    if title_parts:
-        title = " and ".join(title_parts) + f" today — {totalIpo} IPOs live in total"
-    else:
-        title = f"{totalIpo} IPO{'s' if totalIpo > 1 else ''} are live today"
-    
-    
-    # Converting dates back to string for better representation
-    ipoTable['Open'] = ipoTable['Open'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-    ipoTable['Close'] = ipoTable['Close'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-    ipoTable['BoA'] = ipoTable['BoA'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
-    ipoTable['Listing'] = ipoTable['Listing'].apply(lambda x: datetime.strftime(x,"%d-%m-%Y"))
     ipoTable['RII'] = ipoTable['RII'].fillna(0.0)
     
+
     # Prepare a dictionary to hold more detailed information for each company moreInfo{company : {}}
-    moreInfo = {}
-    refund = []
+    moreInfo = {}; refund = []
     
     for index,row in ipoTable.iterrows():
       company = row['Issuer Company']
       link  = url + row['link']
     
       # Loading the ipo page
-      pgsoup = bs(requests.get(link).content,'html.parser')
+      pgsoup = bs(fetch(link),'html.parser')
 
       rfnd = pgsoup.find('ul', class_=["top-ratios", "company-ratios"]).find('strong', string=lambda t: t and 'Refunds Initiation' in t).find_parent('li')
       refund_parts = list(rfnd.stripped_strings)
@@ -310,36 +312,52 @@ try:
       
       # Extracting information
       financials = pgsoup.find('table', id = 'financialTable')
-      objectives = pgsoup.find('table', id = 'ObjectiveIssue')
-    
+
+      issue_size = '0'
+      fresh_issue = '0'
+      ofs = '0'
+
+      for tr in pgsoup.find_all('tr'):
+          tds = tr.find_all('td')
+          # Check if td has 2 columns and the first column contains a <strong> tag (Label)
+          if len(tds) == 2 and tds[0].find('strong'):
+              label = tds[0].find('strong').get_text(strip=True)
+              val = tds[1].get_text(strip=True)
+            
+              if label == 'Issue Size':
+                  issue_size = val
+              elif label == 'Fresh Issue':
+                  fresh_issue = val
+              elif label == 'Offer for Sale':
+                  ofs = val
+        
+      # 3. Extracting Objectives Table (Skipping if Issue Size == OFS)
+      objTable = pd.DataFrame()
+      if issue_size != ofs and issue_size != '0':
+          # Locate the heading containing "IPO Objective"
+          obj_heading = pgsoup.find(lambda tag: tag.name in ['h2', 'h3'] and tag.get_text() and 'IPO Objective' in tag.get_text())
+          if obj_heading:
+              # Find the very next table after the heading
+              objectives = obj_heading.find_next('table')
+              if objectives:
+                  objTable = pd.read_html(StringIO(str(objectives)), header=0)[0]
+                  objTable = objTable.fillna('')
+
       if financials:
           finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
           finTable = finTable.fillna('')
           finTable = finTable.iloc[:-1]
       else:
           finTable = pd.DataFrame()
-    
-      if objectives:
-          objTable = pd.read_html(StringIO(str(objectives)), header = 0)[0]
-          objTable = objTable.fillna('')
-      else:
-          objTable = pd.DataFrame() 
+
     
       info = {}
-      fresh = pgsoup.find('td', attrs={"data-title" : "Fresh Issue Size"})
-      try:
-          issue = pgsoup.find('td', attrs={'data-title' : 'Issue Size'}).get_text()
-      except:
-          issue = 0
         
       info['PE'] = row['PE']
       info['Subscribed (RII)'] = row['RII'] if row['RII'] else '0.0'
-    
-      if fresh:
-        info['Fresh Issue Size'] = fresh.get_text()
-      else:
-        info['Offer For Sale'] =  issue
-        
+      info['Fresh Issue Size'] = fresh_issue
+      info['Offer For Sale'] =  ofs
+
       info['Lot Size'] = f"{row['Lot']} Shares"
       info['Allotment Date'] = row['BoA']
       info['Refund Date'] = datetime.strftime(datetime.strptime(refund_date.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
@@ -357,7 +375,6 @@ try:
       summary = summary.strip("```html")
       summary = summary.strip("```")
       
-      
     
       moreInfo[company] = {"fin": finTable,'obj':objTable,'dates': infodf, 'about':summary}
     
@@ -366,12 +383,12 @@ try:
     ipoTable = ipoTable.drop(columns=['link', 'Listing', 'id', 'PE','Lot','RII','BoA'])
     ipoTable = ipoTable[['Issuer Company', 'Open', 'Close', 'Refund', 'IPO Size', 'IPO Price', 'GMP','Subscribed']]
     ipoTable['Subscribed'] = ipoTable['Subscribed'].fillna('0.0')
-    print(len(ipoTable))
     ipoTable = ipoTable.to_dict(orient='split')
     
     upcoming = upcoming.drop(columns=['link', 'Listing', 'id','Lot'])
     upcoming = upcoming[['Issuer Company', 'Open', 'Close', 'BoA', 'IPO Size', 'IPO Price', 'GMP','PE']]
     upcomingtable = upcoming.to_dict(orient='split')
+
     toggle_cj(is_enabled=False)
     
 except Exception as e:
@@ -391,378 +408,371 @@ Variables used in template:
 #Render the collected information into an HTML email template.
 
 rawHTML = """
-<!DOCTYPE html>
-<html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Active Mainboard IPOs
-  </title>
- </head>
- <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
-  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-   <tr>
-    <td align="center" style="padding: 20px 0;">
-     <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
-      <tr>
-       <td align="center" style="padding: 0 10px;">
-        <div class="header" style="padding: 50px 20px; text-align: center;">
-         <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-          Active Mainboard IPOs
-         </h1>
-         <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
-          As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
-         </p>
-        </div>
-        <!-- Main IPO Table inside its own Card -->
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-         <tr>
-          <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
-           <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
-            {% if activeIPO != 0 %}
-            <thead>
-             <tr>
-              {% for data in ipotable['columns'] %}
-              <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
-               {{data}}
-              </th>
-              {% endfor %}
-             </tr>
-            </thead>
-            <tbody>
-             {% for row in ipotable['data'] %}
-             <tr>
-              <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
-               {{ row[0] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[1] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[2] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[3] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               ₹{{ row[4] }} Cr
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[5] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[6] }}%
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[7] }}
-              </td>
-             </tr>
-             {% endfor %}
-            </tbody>
-            {% else %}
-            <thead>
-             <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
-             </th>
-            </thead>
-            <tbody>
-             <tr>
-              <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
-               <p>
-                As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.
-               </p>
-              </td>
-             </tr>
-            </tbody>
-            {% endif %}
-           </table>
-          </td>
-         </tr>
-        </table>
-        <!-- Spacer -->
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-         <tr>
-          <td height="30" style="font-size: 30px; line-height: 30px;">
-          </td>
-         </tr>
-        </table>
-        <!-- Company Information Cards -->
-        {% if activeIPO != 0 %}
-        {% for row in ipotable['data'] %}
-        <table border="0" cellpadding="0" cellspacing="0" class="company-card-container" width="100%">
-        <tbody>
-         <tr>
-          <td>
-           <div class="company-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); padding: 30px; margin-bottom: 25px; border: 1px solid #dddddd;">
-            <h3 style="margin-top: 0; margin-bottom: 20px; color: #000000; font-size: 24px; font-weight: 700;">
-             About {{row[0]}}
-            </h3>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>
+    Active Mainboard IPOs
+    </title>
+    </head>
+    <body style="margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background-color: #f4f4f4; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #000000;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center" style="padding: 20px 0;">
+        <table border="0" cellpadding="0" cellspacing="0" class="wrapper" style="max-width: 900px; margin: 0 auto;" width="900">
+        <tr>
+        <td align="center" style="padding: 0 10px;">
+            <div class="header" style="padding: 50px 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+            Active Mainboard IPOs
+            </h1>
+            <p style="margin: 10px 0 0; font-size: 16px; color: #333333; line-height: 1.6;">
+            As of {{date.strftime("%d-%m-%Y")}} {{time.strftime("%H:%M:%S")}}, total {{activeIPO}} IPOs are live.
+            </p>
+            </div>
+            <!-- Main IPO Table inside its own Card -->
             <table border="0" cellpadding="0" cellspacing="0" width="100%">
-              <tbody>
-                <!-- About and Key Information Section -->
+            <tr>
+            <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+            <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+                {% if activeIPO != 0 %}
+                <thead>
                 <tr>
-                  <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="55%">
-                  {{moreInfo[row[0]]['about']}}
-                  </td>
-                  <td style="padding-left: 15px;" valign="top" width="45%">
-                  <div class="data-card" style="background-color: #eeeeee; border-radius: 8px; padding: 20px 20px 15px; border: 2px solid #cccccc;">
-                    <h3 style="margin-top:0; margin-bottom: 18px; color: #000000; font-size: 18px">
-                    Key Information
-                    </h3>
-                    <table border="0" cellpadding="0" cellspacing="0" class="nested-table" width="100%">
-                    <tbody>
-                      {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
-                      <tr>
-                      <td class="key" style="color: #000000; padding: 4px 4px; font-size: 14px;">
-                        {{r[0]}}
-                      </td>
-                      <td class="value" style="color: #000000; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
-                        {{r[1]}}
-                      </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                    </table>
-                  </div>
-                  </td>
+                {% for data in ipotable['columns'] %}
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+                {{data}}
+                </th>
+                {% endfor %}
                 </tr>
-                <!-- Financial Details Section -->
+                </thead>
+                <tbody>
+                {% for row in ipotable['data'] %}
                 <tr>
-                  <td colspan="2" style="padding-top: 30px;">
-                  <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000;font-size:18px">
-                    Financial Details
-                  </h3>
-                  {% if not moreInfo[row[0]]['fin'].empty %}
-                  <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
-                    <thead>
-                    <tr style="background-color: #eeeeee">
-                      {% for col_name in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['columns'] %}
-                      <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
-                      {{ col_name }}
-                      </th>
-                      {% endfor %}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for fin_row in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['data'] %}
-                    <tr>
-                      {% for data in fin_row %}
-                      <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
-                      {{ data }}
-                      </td>
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                  </table>
-                  {% else %}
-                  <table>
-                    <tbody>
-                    <tr>
-                      <td>
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                  {% endif %}
-                  </td>
-                  </tr>
-                <!-- Objectives Section -->
-                <tr>
-                  <td colspan="2" style="padding-top: 30px;">
-                  <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000; font-size:18px">
-                    Objectives of IPO
-                  </h3>
-                  {% if not moreInfo[row[0]]['obj'].empty %}
-                  <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
-                    <thead>
-                    <tr style="background-color: #eeeeee">
-                      {% for col_name in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['columns'] %}
-                      <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
-                      {{ col_name }}
-                      </th>
-                      {% endfor %}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for obj_row in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['data'] %}
-                    <tr>
-                      {% for data in obj_row %}
-                      <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
-                      {{ data }}
-                      </td>
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                  </table>
-                  {% else %}
-                    <table>
-                    <tbody>
-                      <tr>
-                      <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="100%">
-                        <p>
-                        The Company will not receive any proceeds from the Offer. All Offer Proceeds shall be received by the Selling Shareholder subsequent to the deduction of Offer-related expenses and applicable taxes, which shall be the responsibility of the Selling Shareholders.
-                        </p>
-                      </td>
-                      </tr>
-                    </tbody>
-                    </table>
-                  {% endif %}
-                  </td>
+                <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+                {{ row[0] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[1] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[2] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[3] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                ₹{{ row[4] }} Cr
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[5] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[6] }}%
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[7] }}
+                </td>
                 </tr>
-
-                </tbody> 
+                {% endfor %}
+                </tbody>
+                {% else %}
+                <thead>
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+                </th>
+                </thead>
+                <tbody>
+                <tr>
+                <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;">
+                <p>
+                    As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, no IPOs are live.
+                </p>
+                </td>
+                </tr>
+                </tbody>
+                {% endif %}
             </table>
-
-           </div>
-          </td>
-         </tr>
-         </tbody>
-        </table>
-        {% endfor %}
-        {% endif %}
-
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-          <tr>
+            </td>
+            </tr>
+            </table>
+            <!-- Spacer -->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+            <td height="30" style="font-size: 30px; line-height: 30px;">
+            </td>
+            </tr>
+            </table>
+            <!-- Company Information Cards -->
+            {% if activeIPO != 0 %}
+            {% for row in ipotable['data'] %}
+            <table border="0" cellpadding="0" cellspacing="0" class="company-card-container" width="100%">
+            <tbody>
+            <tr>
             <td>
-            <div class="header" style="padding: 50px 20px 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
-                Upcoming Mainboard IPOs
-              </h1>
+            <div class="company-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); padding: 30px; margin-bottom: 25px; border: 1px solid #dddddd;">
+                <h3 style="margin-top: 0; margin-bottom: 20px; color: #000000; font-size: 24px; font-weight: 700;">
+                About {{row[0]}}
+                </h3>
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tbody>
+                    <!-- About and Key Information Section -->
+                    <tr>
+                    <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="55%">
+                    {{moreInfo[row[0]]['about']}}
+                    </td>
+                    <td style="padding-left: 15px;" valign="top" width="45%">
+                    <div class="data-card" style="background-color: #eeeeee; border-radius: 8px; padding: 20px 20px 15px; border: 2px solid #cccccc;">
+                        <h3 style="margin-top:0; margin-bottom: 18px; color: #000000; font-size: 18px">
+                        Key Information
+                        </h3>
+                        <table border="0" cellpadding="0" cellspacing="0" class="nested-table" width="100%">
+                        <tbody>
+                        {% for r in moreInfo[row[0]]['dates'].to_dict(orient = 'split')['data'] %}
+                        <tr>
+                        <td class="key" style="color: #000000; padding: 4px 4px; font-size: 14px;">
+                            {{r[0]}}
+                        </td>
+                        <td class="value" style="color: #000000; font-weight: 600; text-align: right; padding: 4px 4px; font-size: 14px;">
+                            {{r[1]}}
+                        </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </td>
+                    </tr>
+                    <!-- Financial Details Section -->
+                    <tr>
+                    <td colspan="2" style="padding-top: 30px;">
+                    <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000;font-size:18px">
+                        Financial Details
+                    </h3>
+                    {% if not moreInfo[row[0]]['fin'].empty %}
+                    <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
+                        <thead>
+                        <tr style="background-color: #eeeeee">
+                        {% for col_name in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['columns'] %}
+                        <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
+                        {{ col_name }}
+                        </th>
+                        {% endfor %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for fin_row in moreInfo[row[0]]['fin'].to_dict(orient = 'split')['data'] %}
+                        <tr>
+                        {% for data in fin_row %}
+                        <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
+                        {{ data }}
+                        </td>
+                        {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <table>
+                        <tbody>
+                        <tr>
+                        <td>
+                        </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    </td>
+                    </tr>
+                    <!-- Objectives Section -->
+                    <tr>
+                    <td colspan="2" style="padding-top: 30px;">
+                    <h3 style="margin-top: 0; margin-bottom: 18px; color: #000000; font-size:18px">
+                        Objectives of IPO
+                    </h3>
+                    {% if not moreInfo[row[0]]['obj'].empty %}
+                    <table border="0" cellpadding="0" cellspacing="0" class="nested-table" style="border: 2px solid #cccccc; border-radius: 8px; overflow: hidden;" width="100%">
+                        <thead>
+                        <tr style="background-color: #eeeeee">
+                        {% for col_name in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['columns'] %}
+                        <th style="font-size: 16px; font-weight: 600; text-align: left; padding: 12px 15px; background-color: #eeeeee; color: #000000; border-bottom: 2px solid #cccccc;">
+                        {{ col_name }}
+                        </th>
+                        {% endfor %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for obj_row in moreInfo[row[0]]['obj'].to_dict(orient = 'split')['data'] %}
+                        <tr>
+                        {% for data in obj_row %}
+                        <td style="padding: 12px 15px; border-bottom: 2px solid #eeeeee; vertical-align: top; font-size: 16px;">
+                        {{ data }}
+                        </td>
+                        {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                        <table>
+                        <tbody>
+                        <tr>
+                        <td class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; padding-right: 25px;" valign="top" width="100%">
+                            <p>
+                            The Company will not receive any proceeds from the Offer. All Offer Proceeds shall be received by the Selling Shareholder subsequent to the deduction of Offer-related expenses and applicable taxes, which shall be the responsibility of the Selling Shareholders.
+                            </p>
+                        </td>
+                        </tr>
+                        </tbody>
+                        </table>
+                    {% endif %}
+                    </td>
+                    </tr>
+
+                    </tbody> 
+                </table>
+
             </div>
             </td>
-          </tr>
-         <tr>
-          <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
-           {% if upcominglen != 0 %}
-           <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
-            <thead>
-             <tr>
-              {% for data in upcomingtable['columns'] %}
-              <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
-               {{data}}
-              </th>
-              {% endfor %}
-             </tr>
-            </thead>
-            <tbody>
-             {% for row in upcomingtable['data'] %}
-             <tr>
-              <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
-               {{ row[0] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[1] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[2] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[3] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               ₹{{ row[4] }} Cr
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[5] }}
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[6] }}%
-              </td>
-              <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
-               {{ row[7] }}
-              </td>
-             </tr>
-             {% endfor %}
-            </tbody>
-           </table>
-           {% else %}
-             <p class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;" valign="top" width="100">
-              As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs
-             </p>
-           {% endif %}
-          </td>
-         </tr>
-        </table>
-        <!-- Request Updated Info Button -->
-        <table border="0" cellpadding="0" cellspacing="0" width="100%">
-         <tr>
-          <td align="center" style="padding: 40px 0 30px;">
-           <table border="0" cellpadding="0" cellspacing="0">
-            <tr>
-             <td align="center" style="border-radius: 6px; background-color: #000000;">
-              <a href="{{updateurl}}" id="updateBtn" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;" target="_blank">
-               Request Updated IPO Report
-              </a>
-             </td>
             </tr>
-           </table>
-          </td>
-         </tr>
+            </tbody>
+            </table>
+            {% endfor %}
+            {% endif %}
+
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td>
+                <div class="header" style="padding: 50px 20px 20px; text-align: center;">
+                <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #000000;">
+                    Upcoming Mainboard IPOs
+                </h1>
+                </div>
+                </td>
+            </tr>
+            <tr>
+            <td class="main-table-card" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+            {% if upcominglen != 0 %}
+            <table border="0" cellpadding="0" cellspacing="0" class="report-container" style="border: 1px solid #dddddd; border-radius: 10px; overflow: hidden;" width="100%">
+                <thead>
+                <tr>
+                {% for data in upcomingtable['columns'] %}
+                <th align="left" style="font-size: 16px; text-align: left; padding: 12px 15px; text-transform: uppercase; letter-spacing: 0.5px; background-color: #000000; color: #ffffff; font-weight: 600; border: none;">
+                {{data}}
+                </th>
+                {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in upcomingtable['data'] %}
+                <tr>
+                <td style="padding: 12px 15px; vertical-align: top; font-size: 16px; font-weight:600; border-bottom: 1px solid #dddddd; color: #555;">
+                {{ row[0] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[1] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[2] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[3] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                ₹{{ row[4] }} Cr
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[5] }}
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[6] }}%
+                </td>
+                <td style="padding: 15px 12px; vertical-align: top; font-size: 16px; border-bottom: 1px solid #dddddd; color: #555; white-space: nowrap;">
+                {{ row[7] }}
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="details-description" style="font-size: 16px; line-height: 1.7; color: #333333; text-align: center; padding: 25px;" valign="top" width="100">
+                As of {{ date.strftime("%d-%m-%Y") }} {{time.strftime("%H:%M:%S")}}, there are no upcoming IPOs
+                </p>
+            {% endif %}
+            </td>
+            </tr>
+            </table>
+            <!-- Request Updated Info Button -->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+            <td align="center" style="padding: 40px 0 30px;">
+            <table border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                <td align="center" style="border-radius: 6px; background-color: #000000;">
+                <a href="{{updateurl}}" id="updateBtn" style="display: inline-block; padding: 14px 28px; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px; background-color: #000000;" target="_blank">
+                Request Updated IPO Report
+                </a>
+                </td>
+                </tr>
+            </table>
+            </td>
+            </tr>
+            </table>
+            <!-- FOOTER START-->
+            <table border="0" cellpadding="0" cellspacing="0" style="margin-top: 20px;" width="100%">
+            <tr>
+            <td align="center" style="padding: 0 20px 50px 20px;">
+            <!-- Thick Separator Line -->
+            <div style="height: 4px; width: 100%; background-color: #000000; max-width: 100px; margin-bottom: 30px;">
+            </div>
+            <!-- Navigation Links -->
+            <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                <a href="https://drive.google.com/file/d/1jnoCaOhTFBV1Imu_NSIs_pM8pjAPRIDB/view?usp=sharing" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">
+                Disclaimer
+                </a>
+                <span style="padding: 0 25px; color: #cccccc;">
+                |
+                </span>
+                <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">
+                Unsubscribe
+                </a>
+            </p>
+            <!-- Disclaimer Text -->
+            <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
+                <strong style="color: #000000;">
+                Disclaimer:
+                </strong>
+                This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' sections are AI-summarized. We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
+            </p>
+            <!-- Automated Note -->
+            <p style="margin: 0; font-size: 12px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 0.5px;">
+                This is an automated report — please do not reply.
+            </p>
+            </td>
+            </tr>
+            </table>
+            <!--- FOOTER END --->
+            
+        </td>
+        </tr>
         </table>
-        <!-- FOOTER START-->
-        <table border="0" cellpadding="0" cellspacing="0" style="margin-top: 20px;" width="100%">
-         <tr>
-          <td align="center" style="padding: 0 20px 50px 20px;">
-           <!-- Thick Separator Line -->
-           <div style="height: 4px; width: 100%; background-color: #000000; max-width: 100px; margin-bottom: 30px;">
-           </div>
-           <!-- Navigation Links -->
-           <p style="margin: 0 0 25px 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
-            <a href="https://drive.google.com/file/d/1jnoCaOhTFBV1Imu_NSIs_pM8pjAPRIDB/view?usp=sharing" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">
-             Disclaimer
-            </a>
-            <span style="padding: 0 25px; color: #cccccc;">
-             |
-            </span>
-            <a href="https://f2792238.sibforms.com/serve/MUIFALPKgXs7hLhhjLehz-MYAHTyFvj3mDWIQp8fVMI6mfOIZzJCZIFqYc1iN3wmC93-rqAkVoe-cSxyFkgIxdXPVF6u15Cj1Nwtq5thPBXfTvTj-PpBX4TnUtu305bjt5c0oj4Fd5sVTMDB3fw_2EaaVW2oN-sloWDAT8wdM7-Sj7y_WgIWvVdCp2_jXwTmRioQgsOUkBj3FAiBew==" style="text-decoration: none; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 2px;">
-             Unsubscribe
-            </a>
-           </p>
-           <!-- Disclaimer Text -->
-           <p style="margin: 0 auto 20px auto; font-size: 12px; line-height: 1.8; color: #777777; max-width: 800px; text-align: center;">
-            <strong style="color: #000000;">
-             Disclaimer:
-            </strong>
-            This service provides consolidated information from publicly available sources believed to be reliable, but we do not guarantee its accuracy or completeness. All dates (Refund, Allotment, Listing) are tentative. We do not trade in or advise Gray Market Premium (GMP) trading. The 'About' sections are AI-summarized. We are not registered with SEBI as a research analyst or investment advisor. This is not financial advice, an endorsement, or a recommendation. All information is for informational purposes only. Please conduct your own due diligence by referring to the Red Herring Prospectus (RHP), official exchange websites (NSE/BSE), and official websites of respective companies.
-           </p>
-           <!-- Automated Note -->
-           <p style="margin: 0; font-size: 12px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 0.5px;">
-            This is an automated report — please do not reply.
-           </p>
-          </td>
-         </tr>
-        </table>
-        <!--- FOOTER END --->
-        
-       </td>
-      </tr>
-     </table>
-    </td>
-   </tr>
-  </table>
- </body>
-</html>
+        </td>
+    </tr>
+    </table>
+    </body>
+    </html>
 """
 
 template = Template(rawHTML)
 finalHTML = template.render(date = date, time = time, ipotable = ipoTable, moreInfo = moreInfo, activeIPO = totalIpo, upcomingtable = upcomingtable, upcominglen = len(upcoming), updateurl = updateurl)
 
 
-
 #Caching this report 
-headers = {
-    "Authorization": f"Bearer {cacheAPI}",
-    "Content-Type": "text/plain"
-}
-data = finalHTML
-
-cacheResponse = requests.put(cacheURL, headers=headers, data=data)
-print(cacheResponse.status_code)
+cacheResponse = fetch(cacheURL, headers = { "Authorization": f"Bearer {cacheAPI}", "Content-Type": "text/plain" }, data = finalHTML)
+print("Cache Status:" + cacheResponse.status_code)
 
 # Finally sending emails
-if totalIpo:
+if flag:
   send_email(finalHTML,title)
 else:
   print(title2)

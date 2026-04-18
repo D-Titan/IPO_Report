@@ -23,8 +23,8 @@ from jinja2 import Template
 def fetch(link : str, headers : dict = { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }, params : dict = {}) :
     return requests.get(link, headers = headers).content
 
-def put(link : str, headers : dict = { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }, params : dict = {}, data) :
-    return requests.put(link, headers = headers).content
+def put(link : str, headers : dict = { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }, data) :
+    return requests.put(link, headers = headers, data=data).content
 
 def getSubs() :
     brevo = "https://api.brevo.com/v3/contacts"

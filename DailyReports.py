@@ -4,6 +4,8 @@ import pandas as pd
 from bs4 import BeautifulSoup as bs
 from datetime import datetime, timedelta
 
+import traceback
+
 from google import genai
 from google.genai import types
 
@@ -392,7 +394,8 @@ try:
     toggle_cj(is_enabled=False)
     
 except Exception as e:
-    print("Error: ", e)
+    traceback.print_exc()
+    print("ERROR: " + e)
     toggle_cj(is_enabled=True)
 
 

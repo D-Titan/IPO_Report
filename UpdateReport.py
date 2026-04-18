@@ -137,6 +137,8 @@ subTable['Subscribed'] = subTable['Total'] + subTable['RII'].apply(lambda x: f' 
 upcoming = ipoTable[ipoTable['Open'] > date]
 ipoTable = ipoTable[(ipoTable['Open'] <= date) & (ipoTable['Close'] >= date)] #Most Imp change from 'and' to using '&'
 
+ipoTable = ipoTable[ipoTable["IPO Price"] != ""]
+
 # Merging tables 
 ipoTable = ipoTable.merge(gmpTable[['GMP','id']], on = 'id', how='left')
 ipoTable = ipoTable.merge(subTable[['Subscribed','id']], on = 'id', how='left')

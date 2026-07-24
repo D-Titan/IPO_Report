@@ -120,11 +120,11 @@ def send_email(template,title):
         print(f"\nAn error occurred: {e}")
 
 
-def summarize(content,api_key):
-  client = genai.Client(api_key = api_key)
+def summarize(content, api_key):
+    client = genai.Client(api_key=api_key)
 
-  config=types.GenerateContentConfig(
-          system_instruction="""
+    config = types.GenerateContentConfig(
+        system_instruction="""
     You are an AI tasked with generating a concise HTML summary of a given company description.
 
     Your response MUST adhere to the following strict rules:
@@ -151,16 +151,30 @@ def summarize(content,api_key):
     </div>
 
     do not provide ouput as a code snippet
-          """,
-          thinking_config=types.ThinkingConfig(thinking_budget=0), # Disables thinking
-          )
-  contents=f"""
+        """,
+        thinking_config=types.ThinkingConfig(thinking_budget=0), # Disables thinking
+    )
+    contents = f"""
     Here is the company description you are to summarize: {content}
-  """
-  model = "gemini-2.5-flash-lite"
+    """
+    
+    # List of models to attempt, in order of preference
+    fallback_models = [
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+    ]
 
-  response = client.models.generate_content(model = model, config = config, contents = contents)
-  return response.text
+    for model in fallback_models:
+        try:
+            response = client.models.generate_content(model=model, config=config, contents=contents)
+            return response.text
+        except Exception as e:
+            print(f"Warning: Model {model} failed with error: {e}. Trying next model...")
+            continue
+            
+    # Ultimate fallback if ALL models fail, ensuring the script doesn't crash
+    return "<div><p><b>Summary:</b> Unavailable at this time due to high API load.</p></div>"
 
 
 def toggle_cj(is_enabled=True):

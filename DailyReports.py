@@ -308,22 +308,33 @@ try:
       # Loading the ipo page
       pgsoup = bs(fetch(link),'html.parser')
 
-      rfnd = pgsoup.find('ul', class_=["top-ratios", "company-ratios"]).find('strong', string=lambda t: t and 'Refunds Initiation' in t).find_parent('li')
-      refund_parts = list(rfnd.stripped_strings)
-      refund_date = refund_parts[1]
+      # 1. Extracting Refund Date
+      refund_date = "N/A"
+      timeline_div = pgsoup.find('div', id='timeline')
       
-      # Extracting information
-      financials = pgsoup.find('table', id = 'financialTable')
-
+      if timeline_div:
+          # Position 4 in the timeline corresponds to Refunds Initiated
+          refund_pos_meta = timeline_div.find('meta', attrs={'itemProp': 'position', 'content': '4'})
+          if refund_pos_meta:
+              tl_item = refund_pos_meta.find_parent('div', class_='tl-item')
+              if tl_item:
+                  date_meta = tl_item.find('meta', attrs={'itemProp': 'description'})
+                  if date_meta and date_meta.get('content'):
+                      refund_date = date_meta['content']
+                  else:
+                      date_div = tl_item.find('div', class_='tl-date')
+                      if date_div:
+                          refund_date = date_div.get_text(strip=True)
+      
+      # 2. Extracting Information (Issue Size, Fresh Issue, OFS)
       issue_size = '0'
       fresh_issue = '0'
       ofs = '0'
 
       for tr in pgsoup.find_all('tr'):
           tds = tr.find_all('td')
-          # Check if td has 2 columns and the first column contains a <strong> tag (Label)
-          if len(tds) == 2 and tds[0].find('strong'):
-              label = tds[0].find('strong').get_text(strip=True)
+          if len(tds) == 2:
+              label = tds[0].get_text(strip=True)
               val = tds[1].get_text(strip=True)
             
               if label == 'Issue Size':
@@ -333,25 +344,25 @@ try:
               elif label == 'Offer for Sale':
                   ofs = val
         
-      # 3. Extracting Objectives Table (Skipping if Issue Size == OFS)
+      # 3. Extracting Objectives Table
       objTable = pd.DataFrame()
       if issue_size != ofs and issue_size != '0':
-          # Locate the heading containing "IPO Objective"
-          obj_heading = pgsoup.find(lambda tag: tag.name in ['h2', 'h3'] and tag.get_text() and 'IPO Objective' in tag.get_text())
-          if obj_heading:
-              # Find the very next table after the heading
-              objectives = obj_heading.find_next('table')
-              if objectives:
-                  objTable = pd.read_html(StringIO(str(objectives)), header=0)[0]
-                  objTable = objTable.fillna('')
+          objectives = pgsoup.find('table', id='ObjectiveIssue')
+          if objectives:
+              objTable = pd.read_html(StringIO(str(objectives)), header=0)[0]
+              objTable = objTable.fillna('')
+
+      # 4. Extracting Financials Table
+      financials_sec = pgsoup.find('div', id='financials')
+      financials = financials_sec.find('table') if financials_sec else None
 
       if financials:
-          finTable = pd.read_html(StringIO(str(financials)),header = 0)[0]
+          finTable = pd.read_html(StringIO(str(financials)), header=0)[0]
           finTable = finTable.fillna('')
+          # Drop the last row containing "Amount in ₹ Crore"
           finTable = finTable.iloc[:-1]
       else:
           finTable = pd.DataFrame()
-
     
       info = {}
         
@@ -362,6 +373,7 @@ try:
 
       info['Lot Size'] = f"{row['Lot']} Shares"
       info['Allotment Date'] = row['BoA']
+      # The extraction yields e.g., "23rd Jul 2026", which works perfectly with your existing formatting
       info['Refund Date'] = datetime.strftime(datetime.strptime(refund_date.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y')
       info['Listing Date'] = row['Listing']
     
@@ -370,7 +382,12 @@ try:
       infodf = pd.DataFrame(pd.Series(info))
       infodf.reset_index(level= None, inplace = True, drop = False)
     
-      about = pgsoup.find('div', attrs = {'aria-labelledby': 'about-tab'}).get_text()
+      # 5. Extracting About Company (Updated for New UI)
+      about_sec = pgsoup.find('div', id='about-company')
+      if about_sec and about_sec.find('div', class_='ipo-acc-prose'):
+          about = about_sec.find('div', class_='ipo-acc-prose').get_text(separator=' ')
+      else:
+          about = "Description not available."
           
       summary = summarize(about,apiKey)
       summary = summary.strip()

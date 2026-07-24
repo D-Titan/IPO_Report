@@ -47,6 +47,9 @@ RECEIVER_EMAIL = receivers['email'] if not receivers.empty else pd.Series()
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
+def fetch(link : str, headers : dict = { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }, params : dict = {}) :
+    return requests.get(link, headers = headers).content
+
 def send_email(template,title):
 
     # Create a secure SSL context
@@ -187,9 +190,28 @@ refund = []
 for index,row in ipoTable.iterrows():
   link  = url + row['link']
   # Loading the ipo page
-  pgsoup = bs(requests.get(link).content,'html.parser')
+  pgsoup = bs(fetch(link),'html.parser')
+
+  # 1. Extracting Refund Date
+  refund_date = "N/A"
+  timeline_div = pgsoup.find('div', id='timeline')
+  
+  if timeline_div:
+	  # Position 4 in the timeline corresponds to Refunds Initiated
+	  refund_pos_meta = timeline_div.find('meta', attrs={'itemprop': 'position', 'content': '4'})
+	  if refund_pos_meta:
+		  tl_item = refund_pos_meta.find_parent('div', class_='tl-item')
+		  if tl_item:
+			  date_meta = tl_item.find('meta', attrs={'itemprop': 'description'})
+			  if date_meta and date_meta.get('content'):
+				  refund_date = date_meta['content']
+			  else:
+				  date_div = tl_item.find('div', class_='tl-date')
+				  if date_div:
+					  refund_date = date_div.get_text(strip=True)
+
   try:
-	  refund.append(datetime.strftime(datetime.strptime(pgsoup.find('td',attrs={'data-title':'Refund Dt'}).string.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y'))
+	  refund.append(datetime.strftime(datetime.strptime(refund_date.replace('th','').replace('nd','').replace('rd','').replace('st',''), '%d %b %Y').date(), '%d-%m-%Y'))
   except:
 	  refund.append('-')
    

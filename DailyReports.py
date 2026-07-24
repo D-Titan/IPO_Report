@@ -314,11 +314,11 @@ try:
       
       if timeline_div:
           # Position 4 in the timeline corresponds to Refunds Initiated
-          refund_pos_meta = timeline_div.find('meta', attrs={'itemProp': 'position', 'content': '4'})
+          refund_pos_meta = timeline_div.find('meta', attrs={'itemprop': 'position', 'content': '4'})
           if refund_pos_meta:
               tl_item = refund_pos_meta.find_parent('div', class_='tl-item')
               if tl_item:
-                  date_meta = tl_item.find('meta', attrs={'itemProp': 'description'})
+                  date_meta = tl_item.find('meta', attrs={'itemprop': 'description'})
                   if date_meta and date_meta.get('content'):
                       refund_date = date_meta['content']
                   else:

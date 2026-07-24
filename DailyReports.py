@@ -307,7 +307,6 @@ try:
     
       # Loading the ipo page
       pgsoup = bs(fetch(link),'html.parser')
-      print(pgsoup)
 
       rfnd = pgsoup.find('ul', class_=["top-ratios", "company-ratios"]).find('strong', string=lambda t: t and 'Refunds Initiation' in t).find_parent('li')
       refund_parts = list(rfnd.stripped_strings)
